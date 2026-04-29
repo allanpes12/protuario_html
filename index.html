@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist de Prontuário - Santa Casa de Rondonópolis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 20px;
+        }
+
+        .header-left h1 {
+            font-size: 48px;
+            color: #003d82;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .header-right {
+            text-align: right;
+        }
+
+        .logo-wrapper {
+            width: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-wrapper img {
+            max-width: 220px;
+            height: auto;
+            display: block;
+            border-radius: 6px;
+        }
+
+        .logo-fallback {
+            width: 220px;
+            background: linear-gradient(135deg, #003d82 0%, #0056b3 100%);
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            padding: 8px 10px;
+        }
+
+        /* Seletor de Tipo */
+        .selector-wrapper {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .selector-wrapper label {
+            font-weight: bold;
+            color: #003d82;
+        }
+
+        .selector-wrapper select {
+            padding: 10px 15px;
+            border: 2px solid #003d82;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+            color: #333;
+            cursor: pointer;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .selector-wrapper select:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Caixa de Orientações */
+        .info-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #003d82;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            color: #003d82;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            list-style: none;
+            margin-left: 15px;
+        }
+
+        .info-box li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .info-box li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #003d82;
+            font-weight: bold;
+        }
+
+        /* Título de Prontuário */
+        .checklist-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #003d82;
+            margin-bottom: 25px;
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%);
+            border-radius: 8px;
+        }
+
+        /* Duas Colunas */
+        .checklist-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .checklist-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .header-left h1 {
+                font-size: 36px;
+                margin-bottom: 15px;
+            }
+
+            .header-right {
+                width: 100%;
+                margin-top: 15px;
+            }
+
+            .logo-wrapper {
+                width: 140px;
+            }
+
+            .logo-wrapper img,
+            .logo-fallback {
+                max-width: 140px;
+                width: 140px;
+            }
+
+            .selector-wrapper {
+                flex-direction: column;
+            }
+
+            .selector-wrapper select {
+                max-width: 100%;
+            }
+        }
+
+        /* Seções */
+        .section {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            background: linear-gradient(135deg, #003d82 0%, #0056b3 100%);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .items-list {
+            list-style: none;
+        }
+
+        .item {
+            display: block;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.2s ease;
+        }
+
+        .item:last-child {
+            border-bottom: none;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+            padding-right: 10px;
+        }
+
+        .item-row:hover {
+            background-color: #f9f9f9;
+        }
+
+        .item.active .item-row {
+            background-color: #e3f2fd;
+        }
+
+        .item-circle {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            min-height: 20px;
+            border: 2px solid #003d82;
+            border-radius: 50%;
+            margin-top: 2px;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+        .item.active .item-circle {
+            background-color: #003d82;
+            box-shadow: 0 0 0 3px #e3f2fd;
+        }
+
+        .item-text {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .item-image-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease;
+            margin-left: 32px;
+            /* alinhar abaixo do texto, à direita do círculo */
+        }
+
+        .item-image-container.show {
+            max-height: 900px;
+            margin-top: 15px;
+        }
+
+        .image-wrapper {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-placeholder {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%);
+            padding: 60px 20px;
+            text-align: center;
+            color: #003d82;
+            font-size: 14px;
+            border: 2px dashed #0056b3;
+            border-radius: 8px;
+        }
+
+        .image-caption {
+            font-size: 12px;
+            color: #666;
+            padding: 10px;
+            text-align: center;
+            background-color: #f9f9f9;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* Rodapé */
+        footer {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            footer {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        .footer-field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-field label {
+            font-weight: bold;
+            color: #003d82;
+        }
+
+        .footer-field .line {
+            flex: 1;
+            border-bottom: 1px solid #333;
+            margin-left: 10px;
+            min-width: 150px;
+        }
+
+        .footer-label-only {
+            font-weight: bold;
+            color: #003d82;
+            margin-bottom: 5px;
+        }
+
+        .footer-line {
+            border-bottom: 1px solid #333;
+            height: 1px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-left">
+                <h1>CHECKLIST</h1>
+            </div>
+            <div class="header-right">
+                <div class="logo-wrapper">
+                    <img id="logoImg" src="imagens/logo.png" alt="Santa Casa Rondonópolis" />
+                    <div id="logoPlaceholder" class="logo-fallback">SANTA CASA<br>RONDONÓPOLIS</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Seletor de Tipo de Checklist -->
+        <div class="selector-wrapper">
+            <label for="checklistType">Tipo de Prontuário:</label>
+            <select id="checklistType">
+                <option value="cirurgico">Prontuário Cirúrgico</option>
+                <option value="clinico">Prontuário Clínico</option>
+                <option value="clinico-rn">Prontuário Clínico — RN</option>
+                <option value="obstetrico">Prontuário Obstétrico</option>
+                <option value="pa">Pronto Atendimento (PA)</option>
+                <option value="ambulatorial-consulta">Ambulatorial — Consulta</option>
+                <option value="ambulatorial-exames">Ambulatorial — Exames</option>
+                <option value="ambulatorial-cirurgia">Ambulatorial — Cirurgia Ambulatorial</option>
+                <option value="uti">Unidade Intensiva (UTI)</option>
+            </select>
+        </div>
+
+        <!-- Caixa de Orientações -->
+        <div class="info-box">
+            <strong>Orientações Gerais:</strong>
+            <ul>
+                <li>Todos os documentos deverão estar corretamente preenchidos, letra legível, assinados e carimbados.
+                </li>
+                <li>Evoluções e prescrições devem ser diárias.</li>
+                <li>Datas e horários coerentes.</li>
+                <li>Sem lacunas, dias sem evolução.</li>
+            </ul>
+        </div>
+
+        <!-- Título do Prontuário -->
+        <div class="checklist-title" id="checklistTitleDisplay">Prontuário Cirúrgico</div>
+
+        <!-- Conteúdo do Checklist -->
+        <div class="checklist-content" id="checklistContent">
+            <!-- Será preenchido por JavaScript -->
+        </div>
+
+        <!-- Rodapé -->
+        <footer>
+            <div class="footer-field">
+                <label>Responsável pela conferência:</label>
+                <div class="line"></div>
+            </div>
+            <div class="footer-field">
+                <label>Data / Horário:</label>
+                <div class="line"></div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // ========================================
+        // DADOS DOS CHECKLISTS
+        // ========================================
+        const checklists = {
+            cirurgico: {
+                title: "Prontuário Cirúrgico",
+                sections: [
+                    {
+                        title: "Identificação e Abertura",
+                        items: [
+                            "Anamnese do paciente — identificação completa: nome, telefone, data de nascimento, CPF, CNS, endereço, bairro, CEP, nome da mãe, município, médico, convênio e registro do atendimento."
+                        ]
+                    },
+                    {
+                        title: "Registros Assistenciais",
+                        items: [
+                            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
+                            "Guia de Autorização SISREG.",
+                            "Sumário / Resumo de alta hospitalar.",
+                            "Evoluções médicas compatíveis com o tempo de permanência.",
+                            "Prescrição médica.",
+                            "Evolução de enfermagem — registro diário.",
+                            "Imprimir exames laboratoriais e laudo de exames de imagem."
+                        ]
+                    },
+                    {
+                        title: "Procedimentos e Registros Complementares",
+                        items: [
+                            "Relatório cirúrgico completo com descrição detalhada do procedimento.",
+                            "Anestesia — tipo, dosagem e complicações.",
+                            "Contagem de compressas, instrumentais e agulhas.",
+                            "Registros de materiais implantados."
+                        ]
+                    },
+                    {
+                        title: "Termos e Documentação",
+                        items: [
+                            "Contrato de prestação de serviços médicos e hospitalares assinado pelo paciente e/ou responsável.",
+                            "Termo de esclarecimento, declaração e responsabilidade assinado pelo paciente e/ou responsável.",
+                            "Cópia do documento do paciente com foto.",
+                            "Se menor de idade, cópia do documento com foto do responsável.",
+                            "Termo de consentimento para intervenção cirúrgica."
+                        ]
+                    }
+                ]
+            },
+            clinico: {
+                title: "Prontuário Clínico",
+                sections: [
+                    {
+                        title: "Identificação e Abertura",
+                        items: [
+                            "Anamnese do paciente — identificação completa: nome, telefone, data de nascimento, CPF, CNS, endereço, bairro, CEP, nome da mãe, município, médico, convênio e registro do atendimento."
+                        ]
+                    },
+                    {
+                        title: "Registros Assistenciais",
+                        items: [
+                            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
+                            "Guia de Autorização SISREG.",
+                            "Anamnese do paciente.",
+                            "Sumário / Resumo de alta hospitalar.",
+                            "Evoluções médicas compatíveis com o tempo de permanência.",
+                            "Prescrição médica.",
+                            "Evolução de enfermagem — registro diário.",
+                            "Imprimir exames laboratoriais e laudo de exames de imagem."
+                        ]
+                    },
+                    {
+                        title: "Termos e Documentação",
+                        items: [
+                            "Contrato de prestação de serviços médicos e hospitalares assinado pelo paciente e/ou responsável.",
+                            "Termo de esclarecimento, declaração e responsabilidade assinado pelo paciente e/ou responsável.",
+                            "Cópia do documento do paciente com foto.",
+                            "Se menor de idade, cópia do documento com foto do responsável."
+                        ]
+                    }
+                ]
+            },
+            "clinico-rn": {
+                title: "Prontuário Clínico — RN",
+                sections: [
+                    {
+                        title: "Identificação e Abertura",
+                        items: [
+                            "Anamnese do recém-nascido — identificação completa: nome, data de nascimento, peso ao nascer, índice de Apgar, dados dos pais."
+                        ]
+                    },
+                    {
+                        title: "Registros Assistenciais",
+                        items: [
+                            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
+                            "Cartão de Triagem Neonatal.",
+                            "Sumário / Resumo de alta hospitalar.",
+                            "Evoluções médicas compatíveis com o tempo de permanência.",
+                            "Prescrição médica.",
+                            "Evolução de enfermagem — registro diário.",
+                            "Imprimir exames laboratoriais e laudo de exames de imagem."
+                        ]
+                    },
+                    {
+                        title: "Termos e Documentação",
+                        items: [
+                            "Contrato de prestação de serviços médicos e hospitalares assinado pelos pais e/ou responsável.",
+                            "Termo de esclarecimento, declaração e responsabilidade assinado pelos pais e/ou responsável.",
+                            "Cópia do documento do recém-nascido.",
+                            "Cópia do documento com foto do responsável."
+                        ]
+                    }
+                ]
+            },
+            obstetrico: {
+                title: "Prontuário Obstétrico",
+                sections: [
+                    {
+                        title: "Identificação e Abertura",
+                        items: [
+                            "Anamnese da gestante — identificação completa: nome, telefone, data de nascimento, CPF, CNS, endereço, bairro, CEP, nome da mãe, município, médico, convênio e registro do atendimento."
+                        ]
+                    },
+                    {
+                        title: "Registros Assistenciais — Médico e Parto",
+                        items: [
+                            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
+                            "Cartão de pré-natal.",
+                            "Sumário / Resumo de alta hospitalar.",
+                            "Evolução de parto — descrição do trabalho de parto e parto.",
+                            "Prescrição médica.",
+                            "Evolução de enfermagem — registro diário.",
+                            "Imprimir exames laboratoriais e laudo de exames de imagem."
+                        ]
+                    },
+                    {
+                        title: "Recém-Nascido (RN)",
+                        items: [
+                            "Dados de nascimento do RN — peso, comprimento, perímetro cefálico.",
+                            "Índice de Apgar.",
+                            "Cartão de Triagem Neonatal.",
+                            "Evolução do RN — registro diário."
+                        ]
+                    },
+                    {
+                        title: "Termos e Documentação",
+                        items: [
+                            "Contrato de prestação de serviços médicos e hospitalares assinado pela gestante e/ou responsável.",
+                            "Termo de esclarecimento, declaração e responsabilidade assinado pela gestante e/ou responsável.",
+                            "Cópia do documento da gestante com foto.",
+                            "Se menor de idade, cópia do documento com foto do responsável.",
+                            "Termo de consentimento para intervenção obstétrica."
+                        ]
+                    }
+                ]
+            },
+            pa: {
+                title: "Pronto Atendimento (PA)",
+                sections: [
+                    {
+                        title: "Identificação e Abertura",
+                        items: [
+                            "Anamnese do paciente — identificação completa: nome, telefone, data de nascimento, CPF, CNS, endereço, bairro, CEP, nome da mãe, município, médico, convênio e registro do atendimento."
+                        ]
+                    },
+                    {
+                        title: "Registros Assistenciais",
+                        items: [
+                            "Ficha de acolhimento e classificação de risco.",
+                            "Evoluções médicas compatíveis com o atendimento.",
+                            "Prescrição médica.",
+                            "Imprimir exames laboratoriais e laudo de exames de imagem."
+                        ]
+                    },
+                    {
+                        title: "Termos e Documentação",
+                        items: [
+                            "Cópia do documento do paciente com foto.",
+                            "Se menor de idade, cópia do documento com foto do responsável.",
+                            "Termo de consentimento, se aplicável."
+                        ]
+                    }
+                ]
+            },
+            "ambulatorial-consulta": {
+                title: "Ambulatorial — Consulta",
+                sections: [
+                    {
+                        title: "Identificação e Abertura",
+                        items: [
+                            "Anamnese do paciente — identificação completa: nome, telefone, data de nascimento, CPF, CNS, endereço, bairro, CEP, nome da mãe, município, médico, convênio e registro do atendimento."
+                        ]
+                    },
+                    {
+                        title: "Registros Assistenciais",
+                        items: [
+                            "Guia de Autorização SISREG.",
+                            "Anamnese do paciente com queixa principal e história da moléstia atual.",
+                            "Prescrição médica.",
+                            "Imprimir exames laboratoriais solicitados."
+                        ]
+                    },
+                    {
+                        title: "Termos e Documentação",
+                        items: [
+                            "Cópia do documento do paciente com foto.",
+                            "Se menor de idade, cópia do documento com foto do responsável."
+                        ]
+                    }
+                ]
+            },
+            "ambulatorial-exames": {
+                title: "Ambulatorial — Exames",
+                sections: [
+                    {
+                        title: "Identificação e Abertura",
+                        items: [
+                            "Anamnese do paciente — identificação completa: nome, telefone, data de nascimento, CPF, CNS, endereço, bairro, CEP, nome da mãe, município, médico, convênio e registro do atendimento."
+                        ]
+                    },
+                    {
+                        title: "Registros Assistenciais",
+                        items: [
+                            "Guia de Autorização SISREG.",
+                            "Solicitação de exames preenchida e assinada pelo médico.",
+                            "Imprimir resultados dos exames laboratoriais anexados ao prontuário.",
+                            "Laudo de exames de imagem."
+                        ]
+                    },
+                    {
+                        title: "Termos e Documentação",
+                        items: [
+                            "Cópia do documento do paciente com foto.",
+                            "Se menor de idade, cópia do documento com foto do responsável."
+                        ]
+                    }
+                ]
+            },
+            "ambulatorial-cirurgia": {
+                title: "Ambulatorial — Cirurgia Ambulatorial",
+                sections: [
+                    {
+                        title: "Identificação e Abertura",
+                        items: [
+                            "Anamnese do paciente — identificação completa: nome, telefone, data de nascimento, CPF, CNS, endereço, bairro, CEP, nome da mãe, município, médico, convênio e registro do atendimento."
+                        ]
+                    },
+                    {
+                        title: "Registros Assistenciais",
+                        items: [
+                            "Guia de Autorização SISREG.",
+                            "Anamnese pré-operatória.",
+                            "Prescrição anestésica e medicamentosa.",
+                            "Relatório cirúrgico completo.",
+                            "Evolução pós-operatória."
+                        ]
+                    },
+                    {
+                        title: "Termos e Documentação",
+                        items: [
+                            "Contrato de prestação de serviços médicos assinado pelo paciente e/ou responsável.",
+                            "Termo de esclarecimento e responsabilidade.",
+                            "Cópia do documento do paciente com foto.",
+                            "Se menor de idade, cópia do documento com foto do responsável.",
+                            "Termo de consentimento para intervenção cirúrgica."
+                        ]
+                    }
+                ]
+            },
+            uti: {
+                title: "Unidade Intensiva (UTI)",
+                sections: [
+                    {
+                        title: "Identificação e Abertura",
+                        items: [
+                            "Anamnese do paciente — identificação completa: nome, telefone, data de nascimento, CPF, CNS, endereço, bairro, CEP, nome da mãe, município, médico, convênio e registro do atendimento."
+                        ]
+                    },
+                    {
+                        title: "Registros Assistenciais",
+                        items: [
+                            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
+                            "Sumário / Resumo de alta hospitalar.",
+                            "Evoluções médicas — registro diário.",
+                            "Prescrição médica — registro diário.",
+                            "Evolução de enfermagem — registro diário.",
+                            "Imprimir exames laboratoriais e laudo de exames de imagem."
+                        ]
+                    },
+                    {
+                        title: "Procedimentos e Dispositivos",
+                        items: [
+                            "Registros de procedimentos invasivos (cateterismo, traqueostomia, etc.).",
+                            "Descrição de dispositivos utilizados (ventilador mecânico, marcapasso, etc.).",
+                            "Registro de complicações e intercorrências."
+                        ]
+                    },
+                    {
+                        title: "Registros Complementares",
+                        items: [
+                            "Protocolo de sedação e analgesia.",
+                            "Escala de Glasgow — registro diário.",
+                            "Registro de suporte nutricional.",
+                            "Anotações de enfermagem com sinais vitais."
+                        ]
+                    },
+                    {
+                        title: "Termos e Documentação",
+                        items: [
+                            "Contrato de prestação de serviços médicos e hospitalares assinado pelo paciente e/ou responsável.",
+                            "Termo de esclarecimento, declaração e responsabilidade assinado pelo paciente e/ou responsável.",
+                            "Cópia do documento do paciente com foto.",
+                            "Se menor de idade, cópia do documento com foto do responsável."
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // ========================================
+        // MAPEAMENTO DE IMAGENS POR ITEM
+        // ========================================
+        const itemImages = {
+            "anamnese": "imagens/logo.png",
+            "aih": "imagens/aih.png",
+            "sisreg": "imagens/sisreg.png",
+            "resumo-alta": "imagens/resumo-alta.png",
+            "evolucoes-medicas": "imagens/evolucoes-medicas.png",
+            "prescricao-medica": "imagens/prescricao-medica.png",
+            "evolucao-enfermagem": "imagens/evolucao-enfermagem.png",
+            "exames": "imagens/exames.png",
+            "relatório-cirurgico": "imagens/relatorio-cirurgico.png",
+            "anestesia": "imagens/anestesia.png",
+            "contagem": "imagens/contagem.png",
+            "materiais": "imagens/materiais.png",
+            "contrato": "imagens/contrato.png",
+            "termo-esclarecimento": "imagens/termo-esclarecimento.png",
+            "documento-paciente": "imagens/documento-paciente.png",
+            "documento-responsavel": "imagens/documento-responsavel.png",
+            "consentimento-cirurgico": "imagens/consentimento-cirurgico.png",
+            "triagem-neonatal": "imagens/triagem-neonatal.png",
+            "cartao-prenatal": "imagens/cartao-prenatal.png",
+            "acolhimento": "imagens/acolhimento.png",
+            "resultado-exames": "imagens/resultado-exames.png",
+            "protocolo-sedacao": "imagens/protocolo-sedacao.png",
+            "glasgow": "imagens/glasgow.png",
+            "suporte-nutricional": "imagens/suporte-nutricional.png"
+        };
+
+        let currentOpenItemId = null;
+        // ========================================
+        //  FUNÇÃO PARA CONTROLAR ITEM ABERTO
+        // ========================================
+        function getImageByItemText(text) {
+            const normalized = text
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "");
+
+            if (normalized.includes("anamnese")) return itemImages["anamnese"];
+            if (normalized.includes("aih") || normalized.includes("internacao hospitalar")) return itemImages["aih"];
+            if (normalized.includes("sisreg")) return itemImages["sisreg"];
+            if (normalized.includes("resumo de alta") || normalized.includes("sumario")) return itemImages["resumo-alta"];
+            if (normalized.includes("evolucoes medicas") || normalized.includes("evolucao medica")) return itemImages["evolucoes-medicas"];
+            if (normalized.includes("prescricao medica")) return itemImages["prescricao-medica"];
+            if (normalized.includes("evolucao de enfermagem")) return itemImages["evolucao-enfermagem"];
+            if (normalized.includes("exames")) return itemImages["exames"];
+            if (normalized.includes("contrato")) return itemImages["contrato"];
+            if (normalized.includes("documento do paciente")) return itemImages["documento-paciente"];
+            if (normalized.includes("responsavel")) return itemImages["documento-responsavel"];
+            if (normalized.includes("consentimento")) return itemImages["consentimento-cirurgico"];
+            if (normalized.includes("acolhimento")) return itemImages["acolhimento"];
+
+            return null;
+        }
+
+
+        // ========================================
+        // FUNÇÃO: Renderizar Checklist
+        // ========================================
+        function renderChecklist(type) {
+            const checklist = checklists[type];
+            if (!checklist) return;
+
+            // Atualizar título
+            document.getElementById("checklistTitleDisplay").textContent = checklist.title;
+
+            // Criar HTML do conteúdo
+            const contentHtml = checklist.sections.map((section, sectionIndex) => {
+                const itemsHtml = section.items.map((item, itemIndex) => {
+                    const itemId = `item-${sectionIndex}-${itemIndex}`;
+                    const imageSrc = getImageByItemText(item);
+
+                    const imageHtml = imageSrc
+                        ? `
+                            <img 
+                                src="${imageSrc}" 
+                                alt="Imagem referente ao item selecionado"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                            >
+                            <div class="image-placeholder" style="display:none;">
+                                📸 Imagem demonstrativa do item selecionado
+                            </div>
+                        `
+                        : `
+                            <div class="image-placeholder">
+                                📸 Imagem demonstrativa do item selecionado
+                            </div>
+                        `;
+
+                    return `
+                    <li class="item" data-item-id="${itemId}">
+                        <div class="item-row">
+                            <div class="item-circle"></div>
+                            <div class="item-text">${item}</div>
+                        </div>
+                        <div class="item-image-container" id="${itemId}-image">
+                            <div class="image-wrapper">
+                                ${imageHtml}
+                            </div>
+                        </div>
+                    </li>
+                `;
+                }).join("");
+
+                return `
+                    <div class="section">
+                        <div class="section-title">${section.title}</div>
+                        <ul class="items-list">
+                            ${itemsHtml}
+                        </ul>
+                    </div>
+                `;
+            }).join("");
+
+            document.getElementById("checklistContent").innerHTML = contentHtml;
+
+            // Re-anexar event listeners
+            attachItemListeners();
+            currentOpenItemId = null;
+        }
+
+        // ========================================
+        // FUNÇÃO: Anexar Event Listeners aos Itens
+        // ========================================
+        function attachItemListeners() {
+            document.querySelectorAll(".item").forEach(item => {
+                const row = item.querySelector('.item-row');
+                if (!row) return;
+                row.addEventListener('click', function (e) {
+                    const itemId = item.dataset.itemId;
+                    toggleImagem(itemId);
+                });
+            });
+        }
+
+        // ========================================
+        // FUNÇÃO: Toggle Imagem
+        // ========================================
+        function toggleImagem(itemId) {
+            const imageContainer = document.getElementById(`${itemId}-image`);
+            const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+
+            // Fechar imagem anterior se aberta
+            if (currentOpenItemId && currentOpenItemId !== itemId) {
+                const previousContainer = document.getElementById(`${currentOpenItemId}-image`);
+                const previousItem = document.querySelector(`[data-item-id="${currentOpenItemId}"]`);
+                if (previousContainer && previousItem) {
+                    previousContainer.classList.remove("show");
+                    previousItem.classList.remove("active");
+                }
+            }
+
+            // Toggle da imagem atual
+            if (imageContainer.classList.contains("show")) {
+                imageContainer.classList.remove("show");
+                itemElement.classList.remove("active");
+                currentOpenItemId = null;
+            } else {
+                imageContainer.classList.add("show");
+                itemElement.classList.add("active");
+                currentOpenItemId = itemId;
+
+                // Scroll suave
+                setTimeout(() => {
+                    imageContainer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                }, 100);
+            }
+        }
+
+        // ========================================
+        // Inicializa a logo: carrega a imagem e exibe fallback se não existir
+        // ========================================
+        function initLogo() {
+            const img = document.getElementById('logoImg');
+            const fallback = document.getElementById('logoPlaceholder');
+            if (!img) return;
+
+            img.addEventListener('error', () => {
+                img.style.display = 'none';
+                if (fallback) fallback.style.display = 'flex';
+            });
+
+            img.addEventListener('load', () => {
+                if (fallback) fallback.style.display = 'none';
+                img.style.display = 'block';
+            });
+
+            // Caso a imagem não carregue imediatamente (cache ou inexistente)
+            setTimeout(() => {
+                if (img.naturalWidth === 0) {
+                    img.style.display = 'none';
+                    if (fallback) fallback.style.display = 'flex';
+                }
+            }, 300);
+        }
+
+        // ========================================
+        // Event Listener: Mudança de Tipo de Checklist
+        // ========================================
+        document.getElementById("checklistType").addEventListener("change", function () {
+            renderChecklist(this.value);
+        });
+
+        // ========================================
+        // Inicialização
+        // ========================================
+        document.addEventListener("DOMContentLoaded", function () {
+            renderChecklist("cirurgico");
+            initLogo();
+        });
+    </script>
+</body>
+
+</html>
