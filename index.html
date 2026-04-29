@@ -324,6 +324,71 @@
             border-top: 1px solid #e0e0e0;
         }
 
+        /* Modal de visualização (fullscreen) */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            position: relative;
+            background: #fff;
+            border-radius: 10px;
+            max-width: 1000px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .modal-body {
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            background: #fff;
+        }
+
+        .modal-body img {
+            max-width: 100%;
+            max-height: 75vh;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: #003d82;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .modal-caption {
+            padding: 10px 18px 18px 18px;
+            font-size: 13px;
+            color: #444;
+            text-align: center;
+            background: #fafafa;
+            border-top: 1px solid #eee;
+        }
+
         /* Rodapé */
         footer {
             margin-top: 40px;
@@ -436,6 +501,20 @@
                 <div class="line"></div>
             </div>
         </footer>
+    </div>
+
+    <!-- Modal de visualização -->
+    <div id="imageModal" class="modal-overlay" aria-hidden="true">
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <button class="modal-close" id="modalClose">Voltar</button>
+            <div class="modal-body">
+                <img id="modalImg" src="" alt="Imagem em tamanho completo" style="display:none;" />
+                <div id="modalPlaceholder" class="image-placeholder" style="display:none;">
+                    📸 Imagem demonstrativa do item selecionado
+                </div>
+            </div>
+            <div id="modalCaption" class="modal-caption"></div>
+        </div>
     </div>
 
     <script>
@@ -827,35 +906,11 @@
             const contentHtml = checklist.sections.map((section, sectionIndex) => {
                 const itemsHtml = section.items.map((item, itemIndex) => {
                     const itemId = `item-${sectionIndex}-${itemIndex}`;
-                    const imageSrc = getImageByItemText(item);
-
-                    const imageHtml = imageSrc
-                        ? `
-                            <img 
-                                src="${imageSrc}" 
-                                alt="Imagem referente ao item selecionado"
-                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                            >
-                            <div class="image-placeholder" style="display:none;">
-                                📸 Imagem demonstrativa do item selecionado
-                            </div>
-                        `
-                        : `
-                            <div class="image-placeholder">
-                                📸 Imagem demonstrativa do item selecionado
-                            </div>
-                        `;
-
                     return `
                     <li class="item" data-item-id="${itemId}">
                         <div class="item-row">
                             <div class="item-circle"></div>
                             <div class="item-text">${item}</div>
-                        </div>
-                        <div class="item-image-container" id="${itemId}-image">
-                            <div class="image-wrapper">
-                                ${imageHtml}
-                            </div>
                         </div>
                     </li>
                 `;
@@ -887,7 +942,9 @@
                 if (!row) return;
                 row.addEventListener('click', function (e) {
                     const itemId = item.dataset.itemId;
-                    toggleImagem(itemId);
+                    const text = item.querySelector('.item-text')?.textContent || '';
+                    const imageSrc = getImageByItemText(text);
+                    openModal(imageSrc, text);
                 });
             });
         }
@@ -927,6 +984,50 @@
         }
 
         // ========================================
+        // FUNÇÃO: Modal fullscreen para visualização da imagem
+        // ========================================
+        function openModal(imageSrc, captionText) {
+            const overlay = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImg');
+            const modalPlaceholder = document.getElementById('modalPlaceholder');
+            const modalCaption = document.getElementById('modalCaption');
+            if (!overlay) return;
+
+            // Reset
+            modalImg.style.display = 'none';
+            modalPlaceholder.style.display = 'none';
+            modalImg.src = '';
+            modalCaption.textContent = captionText || '';
+
+            if (imageSrc) {
+                modalImg.style.display = 'block';
+                modalImg.src = imageSrc;
+                modalImg.onerror = function () {
+                    modalImg.style.display = 'none';
+                    modalPlaceholder.style.display = 'block';
+                };
+            } else {
+                modalPlaceholder.style.display = 'block';
+            }
+
+            overlay.classList.add('show');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const overlay = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImg');
+            const modalPlaceholder = document.getElementById('modalPlaceholder');
+            if (!overlay) return;
+            overlay.classList.remove('show');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            if (modalImg) modalImg.src = '';
+            if (modalPlaceholder) modalPlaceholder.style.display = 'none';
+        }
+
+        // ========================================
         // Inicializa a logo: carrega a imagem e exibe fallback se não existir
         // ========================================
         function initLogo() {
@@ -958,6 +1059,23 @@
         // ========================================
         document.getElementById("checklistType").addEventListener("change", function () {
             renderChecklist(this.value);
+        });
+
+        // Fecha modal ao clicar fora do conteúdo ou no botão Voltar
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('imageModal');
+            const modalClose = document.getElementById('modalClose');
+            if (overlay) {
+                overlay.addEventListener('click', function (e) {
+                    if (e.target === overlay) closeModal();
+                });
+            }
+            if (modalClose) modalClose.addEventListener('click', closeModal);
+
+            // Fecha com ESC
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeModal();
+            });
         });
 
         // ========================================
