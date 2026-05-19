@@ -37,13 +37,20 @@
     .modal-content { width: min(1180px, 96vw); max-height: 92vh; overflow: hidden; background: #fff; border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.36); display: flex; flex-direction: column; }
     .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; border-bottom: 1px solid #e7edf3; background: #f8fbfe; }
     .modal-title { color: #0d5c95; font-size: 15px; font-weight: 800; line-height: 1.25; }
-    .modal-close { border: 0; border-radius: 999px; background: #0d5c95; color: #fff; font-weight: 800; padding: 9px 14px; cursor: pointer; }
-    .modal-close:hover, .modal-close:focus-visible { background: #0a4774; }
+    .modal-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+    .modal-action, .modal-close { border: 0; border-radius: 999px; background: #0d5c95; color: #fff; font-weight: 800; padding: 9px 13px; cursor: pointer; font-size: 13px; }
+    .modal-action.secondary { background: #e8f1f8; color: #0d5c95; border: 1px solid #bed6e8; }
+    .modal-action:hover, .modal-action:focus-visible, .modal-close:hover, .modal-close:focus-visible { background: #0a4774; color: #fff; }
+    .zoom-value { min-width: 52px; text-align: center; color: #0d5c95; font-size: 13px; font-weight: 800; }
     .modal-body { padding: 18px; background: #fff; overflow: auto; }
     .modal-images { width: 100%; }
     .image-carousel { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 4px 12px; }
-    .image-frame { flex: 0 0 100%; scroll-snap-align: center; border: 1px solid #dfe8f0; border-radius: 14px; background: #f8fbfe; padding: 10px; min-height: 220px; display: flex; align-items: center; justify-content: center; }
-    .image-frame img { display: block; width: 100%; max-height: 68vh; object-fit: contain; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.12); background: #fff; }
+    .image-carousel.zoomed { overflow-x: hidden; scroll-snap-type: none; }
+    .image-frame { flex: 0 0 100%; scroll-snap-align: center; border: 1px solid #dfe8f0; border-radius: 14px; background: #f8fbfe; padding: 10px; min-height: 220px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: zoom-in; touch-action: pan-x; }
+    .image-frame.is-zoomed { cursor: grab; touch-action: none; }
+    .image-frame.is-dragging { cursor: grabbing; }
+    .image-frame img { display: block; width: 100%; max-height: 68vh; object-fit: contain; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.12); background: #fff; transform-origin: center center; transition: transform .12s ease; will-change: transform; user-select: none; -webkit-user-drag: none; }
+    .image-frame.is-dragging img { transition: none; }
     .image-frame .image-error { display: none; width: 100%; padding: 42px 18px; border: 2px dashed #1a78bd; border-radius: 12px; color: #0d5c95; text-align: center; font-weight: 700; }
     .carousel-toolbar { display: none; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; }
     .carousel-toolbar.show { display: flex; }
@@ -68,6 +75,8 @@
       .section.span-2 { grid-column: auto; }
       .footer-field { align-items: flex-start; flex-direction: column; }
       .footer-field .line { width: 100%; }
+      .modal-header { align-items: flex-start; flex-direction: column; }
+      .modal-actions { justify-content: flex-start; }
     }
     @page { size: A4 portrait; margin: 10mm; }
     @media print {
@@ -121,7 +130,13 @@
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modal-header">
         <div id="modalTitle" class="modal-title">Imagem do item selecionado</div>
-        <button type="button" id="modalClose" class="modal-close">Voltar</button>
+        <div class="modal-actions" aria-label="Controles da imagem">
+          <button type="button" id="zoomOut" class="modal-action secondary" title="Diminuir zoom">−</button>
+          <span id="zoomValue" class="zoom-value">100%</span>
+          <button type="button" id="zoomIn" class="modal-action secondary" title="Aumentar zoom">+</button>
+          <button type="button" id="zoomReset" class="modal-action secondary" title="Restaurar imagem">Ajustar</button>
+          <button type="button" id="modalClose" class="modal-close">Voltar</button>
+        </div>
       </div>
       <div class="modal-body">
         <div id="modalImages" class="modal-images"></div>
@@ -479,6 +494,173 @@
       return { title: rule.title, images: rule.images };
     }
 
+    const ZOOM_MIN = 1;
+    const ZOOM_MAX = 5;
+    const ZOOM_STEP = 0.25;
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function getFrameState(frame) {
+      return {
+        scale: Number(frame.dataset.scale || 1),
+        x: Number(frame.dataset.x || 0),
+        y: Number(frame.dataset.y || 0)
+      };
+    }
+
+    function saveFrameState(frame, state) {
+      frame.dataset.scale = String(state.scale);
+      frame.dataset.x = String(state.x);
+      frame.dataset.y = String(state.y);
+    }
+
+    function getCurrentFrame() {
+      const carousel = document.getElementById("imageCarousel");
+      if (!carousel) return null;
+      const frames = Array.from(carousel.querySelectorAll(".image-frame"));
+      if (!frames.length) return null;
+      const center = carousel.scrollLeft + carousel.clientWidth / 2;
+      return frames.reduce((best, frame) => {
+        const frameCenter = frame.offsetLeft + frame.clientWidth / 2;
+        const distance = Math.abs(frameCenter - center);
+        return !best || distance < best.distance ? { frame, distance } : best;
+      }, null).frame;
+    }
+
+    function clampFramePan(frame, state) {
+      if (state.scale <= 1) {
+        state.x = 0;
+        state.y = 0;
+        return state;
+      }
+      const maxX = Math.max(0, (frame.clientWidth * (state.scale - 1)) / 2);
+      const maxY = Math.max(0, (frame.clientHeight * (state.scale - 1)) / 2);
+      state.x = clamp(state.x, -maxX, maxX);
+      state.y = clamp(state.y, -maxY, maxY);
+      return state;
+    }
+
+    function syncCarouselZoomState() {
+      const carousel = document.getElementById("imageCarousel");
+      if (!carousel) return;
+      const hasZoomedFrame = Array.from(carousel.querySelectorAll(".image-frame")).some((frame) => getFrameState(frame).scale > 1);
+      carousel.classList.toggle("zoomed", hasZoomedFrame);
+    }
+
+    function updateZoomValue(frame) {
+      const zoomValue = document.getElementById("zoomValue");
+      if (!zoomValue) return;
+      const currentFrame = frame || getCurrentFrame();
+      const scale = currentFrame ? getFrameState(currentFrame).scale : 1;
+      zoomValue.textContent = `${Math.round(scale * 100)}%`;
+    }
+
+    function applyFrameTransform(frame) {
+      if (!frame) return;
+      const img = frame.querySelector("img");
+      if (!img) return;
+      const state = clampFramePan(frame, getFrameState(frame));
+      saveFrameState(frame, state);
+      img.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+      frame.classList.toggle("is-zoomed", state.scale > 1);
+      syncCarouselZoomState();
+      updateZoomValue(frame);
+    }
+
+    function setFrameZoom(frame, scale) {
+      if (!frame) return;
+      const state = getFrameState(frame);
+      state.scale = clamp(scale, ZOOM_MIN, ZOOM_MAX);
+      if (state.scale === 1) {
+        state.x = 0;
+        state.y = 0;
+      }
+      saveFrameState(frame, state);
+      applyFrameTransform(frame);
+    }
+
+    function zoomCurrentImage(direction) {
+      const frame = getCurrentFrame();
+      if (!frame) return;
+      const state = getFrameState(frame);
+      setFrameZoom(frame, state.scale + direction * ZOOM_STEP);
+    }
+
+    function resetCurrentZoom() {
+      const frame = getCurrentFrame();
+      if (!frame) return;
+      saveFrameState(frame, { scale: 1, x: 0, y: 0 });
+      applyFrameTransform(frame);
+    }
+
+    function resetAllZoom() {
+      document.querySelectorAll(".image-frame").forEach((frame) => {
+        saveFrameState(frame, { scale: 1, x: 0, y: 0 });
+        applyFrameTransform(frame);
+        frame.classList.remove("is-dragging");
+      });
+      syncCarouselZoomState();
+      updateZoomValue();
+    }
+
+    function enableImageZoom(frame) {
+      let dragging = false;
+      let startX = 0;
+      let startY = 0;
+      let baseX = 0;
+      let baseY = 0;
+
+      frame.addEventListener("wheel", function (event) {
+        event.preventDefault();
+        const state = getFrameState(frame);
+        const direction = event.deltaY < 0 ? 1 : -1;
+        setFrameZoom(frame, state.scale + direction * ZOOM_STEP);
+      }, { passive: false });
+
+      frame.addEventListener("dblclick", function () {
+        const state = getFrameState(frame);
+        setFrameZoom(frame, state.scale > 1 ? 1 : 2);
+      });
+
+      frame.addEventListener("pointerdown", function (event) {
+        const state = getFrameState(frame);
+        if (state.scale <= 1) return;
+        dragging = true;
+        startX = event.clientX;
+        startY = event.clientY;
+        baseX = state.x;
+        baseY = state.y;
+        frame.classList.add("is-dragging");
+        frame.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+
+      frame.addEventListener("pointermove", function (event) {
+        if (!dragging) return;
+        const state = getFrameState(frame);
+        state.x = baseX + event.clientX - startX;
+        state.y = baseY + event.clientY - startY;
+        saveFrameState(frame, state);
+        applyFrameTransform(frame);
+      });
+
+      function finishDrag(event) {
+        if (!dragging) return;
+        dragging = false;
+        frame.classList.remove("is-dragging");
+        try { frame.releasePointerCapture(event.pointerId); } catch (error) {}
+      }
+
+      frame.addEventListener("pointerup", finishDrag);
+      frame.addEventListener("pointercancel", finishDrag);
+      frame.addEventListener("pointerleave", function (event) {
+        if (dragging && event.buttons === 0) finishDrag(event);
+      });
+    }
+
+
     function renderModalImages(images, itemText) {
       const modalImages = document.getElementById("modalImages");
       const modalFallback = document.getElementById("modalFallback");
@@ -502,6 +684,9 @@
       images.forEach((src, index) => {
         const frame = document.createElement("figure");
         frame.className = "image-frame";
+        frame.dataset.scale = "1";
+        frame.dataset.x = "0";
+        frame.dataset.y = "0";
 
         const img = document.createElement("img");
         img.src = src;
@@ -519,16 +704,22 @@
 
         frame.appendChild(img);
         frame.appendChild(error);
+        enableImageZoom(frame);
         carousel.appendChild(frame);
       });
 
+      carousel.addEventListener("scroll", function () {
+        window.requestAnimationFrame(function () { updateZoomValue(); });
+      });
       modalImages.appendChild(carousel);
+      updateZoomValue();
       if (toolbar && images.length > 1) toolbar.classList.add("show");
     }
 
     function moveCarousel(direction) {
       const carousel = document.getElementById("imageCarousel");
       if (!carousel) return;
+      resetAllZoom();
       const amount = carousel.clientWidth * direction;
       carousel.scrollBy({ left: amount, behavior: "smooth" });
     }
@@ -596,10 +787,12 @@
       const overlay = document.getElementById("imageModal");
       const modalImages = document.getElementById("modalImages");
       if (!overlay) return;
+      resetAllZoom();
       overlay.classList.remove("show");
       overlay.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
       if (modalImages) modalImages.innerHTML = "";
+      updateZoomValue();
     }
 
     document.getElementById("checklistContent").addEventListener("click", function (event) {
@@ -613,11 +806,20 @@
     });
 
     document.getElementById("modalClose").addEventListener("click", closeModal);
+    document.getElementById("zoomIn").addEventListener("click", function () { zoomCurrentImage(1); });
+    document.getElementById("zoomOut").addEventListener("click", function () { zoomCurrentImage(-1); });
+    document.getElementById("zoomReset").addEventListener("click", resetCurrentZoom);
     document.getElementById("carouselPrev").addEventListener("click", function () { moveCarousel(-1); });
     document.getElementById("carouselNext").addEventListener("click", function () { moveCarousel(1); });
 
     document.addEventListener("keydown", function (event) {
+      const overlay = document.getElementById("imageModal");
+      const modalOpen = overlay && overlay.classList.contains("show");
       if (event.key === "Escape") closeModal();
+      if (!modalOpen) return;
+      if (event.key === "+" || event.key === "=") zoomCurrentImage(1);
+      if (event.key === "-" || event.key === "_") zoomCurrentImage(-1);
+      if (event.key === "0") resetCurrentZoom();
     });
 
     document.getElementById("checklistType").addEventListener("change", function () {
