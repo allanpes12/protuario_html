@@ -24,10 +24,25 @@
     .section.span-2 { grid-column: 1 / -1; }
     .section-title { color: #fff; font-weight: 700; font-size: 15px; padding: 12px 18px; border-radius: 999px; margin-bottom: 10px; background: linear-gradient(135deg, #0d4f83 0%, #1a78bd 100%); }
     .items-list { list-style: none; }
-    .item { display: flex; align-items: flex-start; gap: 13px; padding: 8px 0; border-bottom: 1px solid #e4e4e4; font-size: 13.5px; line-height: 1.35; }
-    .item-circle { width: 21px; height: 21px; min-width: 21px; border: 3px solid #1d5d8d; border-radius: 50%; background: #fff; margin-top: 1px; }
+    .item { display: block; border-bottom: 1px solid #e4e4e4; font-size: 13.5px; line-height: 1.35; }
+    .item-row { display: flex; align-items: flex-start; gap: 13px; width: 100%; padding: 8px 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .item-row:hover .item-text, .item-row:focus-visible .item-text { color: #0d5c95; }
+    .item-row:focus-visible { outline: 2px solid #1a78bd; outline-offset: 3px; border-radius: 8px; }
+    .item-circle { width: 21px; height: 21px; min-width: 21px; border: 3px solid #1d5d8d; border-radius: 50%; background: #fff; margin-top: 1px; transition: background-color .15s ease, box-shadow .15s ease; }
+    .item.active .item-circle { background: #1d5d8d; box-shadow: inset 0 0 0 4px #fff; }
     .item-text { flex: 1; }
     .item-text strong { font-weight: 800; }
+    .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 22px; background: rgba(0, 29, 51, .68); }
+    .modal-overlay.show { display: flex; }
+    .modal-content { width: min(940px, 96vw); max-height: 92vh; overflow: hidden; background: #fff; border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.36); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; border-bottom: 1px solid #e7edf3; background: #f8fbfe; }
+    .modal-title { color: #0d5c95; font-size: 15px; font-weight: 800; line-height: 1.25; }
+    .modal-close { border: 0; border-radius: 999px; background: #0d5c95; color: #fff; font-weight: 800; padding: 9px 14px; cursor: pointer; }
+    .modal-close:hover, .modal-close:focus-visible { background: #0a4774; }
+    .modal-body { padding: 18px; background: #fff; display: flex; align-items: center; justify-content: center; }
+    .modal-body img { display: block; max-width: 100%; max-height: 72vh; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.12); }
+    .modal-caption { padding: 12px 18px 18px; color: #444; font-size: 13px; line-height: 1.4; background: #fff; border-top: 1px solid #eef2f5; }
+    .modal-fallback { display: none; width: 100%; padding: 48px 22px; border: 2px dashed #1a78bd; border-radius: 14px; background: #f4f9fd; color: #0d5c95; text-align: center; font-weight: 700; }
     footer { margin-top: 34px; border-top: 1px solid #d6d6d6; padding-top: 18px; font-size: 14px; }
     .footer-field { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
     .footer-field label { white-space: nowrap; color: #333; }
@@ -55,6 +70,8 @@
       .section-title { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
       .info-box { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
       .item { break-inside: avoid; }
+      .item-row { cursor: default; }
+      .modal-overlay { display: none !important; }
     }
   </style>
 </head>
@@ -88,6 +105,21 @@
       <div class="footer-field"><label>Responsável pela conferência:</label><div class="line"></div></div>
       <div class="footer-field"><label>Data / Horário:</label><div class="line"></div></div>
     </footer>
+  </div>
+
+
+  <div id="imageModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div id="modalTitle" class="modal-title">Imagem do item selecionado</div>
+        <button type="button" id="modalClose" class="modal-close">Voltar</button>
+      </div>
+      <div class="modal-body">
+        <img id="modalImg" src="" alt="Imagem referente ao item selecionado" />
+        <div id="modalFallback" class="modal-fallback">Imagem não encontrada para este item.</div>
+      </div>
+      <div id="modalCaption" class="modal-caption"></div>
+    </div>
   </div>
 
   <script>
@@ -363,10 +395,135 @@
         .replace(/'/g, "&#039;");
     }
 
+    function getItemText(item) {
+      return typeof item === "string" ? item : item.text;
+    }
+
     function itemHtml(item) {
-      const text = typeof item === "string" ? item : item.text;
+      const text = getItemText(item);
       const safe = escapeHtml(text);
       return typeof item === "object" && item.bold ? `<strong>${safe}</strong>` : safe;
+    }
+
+    function escapeXml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+    }
+
+    function normalizeText(value) {
+      return String(value)
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+    }
+
+    function wrapText(text, maxChars, maxLines) {
+      const words = String(text).split(/\s+/).filter(Boolean);
+      const lines = [];
+      let current = "";
+
+      words.forEach((word) => {
+        const next = current ? `${current} ${word}` : word;
+        if (next.length > maxChars && current) {
+          lines.push(current);
+          current = word;
+        } else {
+          current = next;
+        }
+      });
+
+      if (current) lines.push(current);
+      if (lines.length > maxLines) {
+        const visible = lines.slice(0, maxLines);
+        visible[maxLines - 1] = visible[maxLines - 1].replace(/[.,;:]?$/, "") + "...";
+        return visible;
+      }
+      return lines;
+    }
+
+    const imageRules = [
+      { keys: ["acolhimento", "classificacao de risco"], title: "Ficha de acolhimento e classificação de risco" },
+      { keys: ["aih", "internacao hospitalar", "operadora"], title: "AIH / Guia de Autorização da Operadora" },
+      { keys: ["sisreg"], title: "Guia / Autorização SISREG" },
+      { keys: ["anamnese"], title: "Anamnese do paciente" },
+      { keys: ["sumario", "resumo de alta"], title: "Sumário / Resumo de alta hospitalar" },
+      { keys: ["evolucao medica", "evolucoes medicas", "intensivista", "diarista"], title: "Evolução médica" },
+      { keys: ["prescricao de alta"], title: "Prescrição de alta médica" },
+      { keys: ["prescricao de hemodialise", "hemodialise"], title: "Prescrição de hemodiálise" },
+      { keys: ["prescricao medica", "prescricao do recem nascido"], title: "Prescrição médica" },
+      { keys: ["descricao cirurgica", "partograma", "procedimentos"], title: "Descrição cirúrgica / Partograma" },
+      { keys: ["relatorio de anestesia", "anestesia"], title: "Relatório de anestesia" },
+      { keys: ["pre anestesica"], title: "Avaliação pré-anestésica" },
+      { keys: ["produtos por atendimento", "aviso de cirurgia", "folha de gastos"], title: "Aviso de cirurgia / Folha de gastos" },
+      { keys: ["srpa"], title: "Ficha de acompanhamento na SRPA" },
+      { keys: ["enfermagem perioperatoria"], title: "Enfermagem perioperatória" },
+      { keys: ["cirurgia segura"], title: "Cirurgia segura" },
+      { keys: ["integrador quimico"], title: "Integrador químico" },
+      { keys: ["opme"], title: "Registro de utilização de OPME" },
+      { keys: ["anatomopatologico"], title: "Solicitação de exame anatomopatológico" },
+      { keys: ["exames laboratoriais", "exames de imagem", "resultado", "tomografia", "apac", "exames do recem nascido"], title: "Exames / Resultados anexados" },
+      { keys: ["fisioterapia"], title: "Evolução da fisioterapia" },
+      { keys: ["evolucao de enfermagem", "registro diario"], title: "Evolução de enfermagem" },
+      { keys: ["identificacao do rn", "ficha amarela", "pezinho"], title: "Identificação do recém-nascido" },
+      { keys: ["recepcao do rn"], title: "Ficha de recepção do RN" },
+      { keys: ["evolucao medica do rn"], title: "Evolução médica do RN" },
+      { keys: ["declaracao de nascido vivo"], title: "Declaração de nascido vivo" },
+      { keys: ["certidao de nascimento"], title: "Certidão de nascimento" },
+      { keys: ["laqueadura", "vasectomia"], title: "Planejamento familiar" },
+      { keys: ["cardiotocografia"], title: "Cardiotocografia fetal" },
+      { keys: ["laboratorio"], title: "Ficha de recepção do laboratório" },
+      { keys: ["autorizacao guia do exame", "guia do exame"], title: "Autorização / Guia do exame" },
+      { keys: ["procedimentos ambulatoriais"], title: "Autorização de procedimento ambulatorial" },
+      { keys: ["cateter", "picc", "traqueostomia", "drenagem de torax"], title: "Procedimentos e dispositivos" },
+      { keys: ["eletrocardiograma"], title: "Eletrocardiograma" },
+      { keys: ["contrato"], title: "Contrato de prestação de serviços" },
+      { keys: ["termo de esclarecimento", "declaracao e responsabilidade"], title: "Termo de esclarecimento e responsabilidade" },
+      { keys: ["consentimento"], title: "Termo de consentimento" },
+      { keys: ["documento do paciente"], title: "Documento do paciente" },
+      { keys: ["responsavel"], title: "Documento do responsável" }
+    ];
+
+    function getReferenceTitle(itemText) {
+      const normalized = normalizeText(itemText);
+      const rule = imageRules.find((entry) => entry.keys.some((key) => normalized.includes(key)));
+      return rule ? rule.title : "Documento do checklist";
+    }
+
+    function buildReferenceImage(itemText) {
+      const referenceTitle = getReferenceTitle(itemText);
+      const lines = wrapText(itemText, 58, 7);
+      const textLines = lines.map((line, index) => {
+        const y = 250 + index * 34;
+        return `<text x="80" y="${y}" font-family="Arial, Helvetica, sans-serif" font-size="21" fill="#26343d">${escapeXml(line)}</text>`;
+      }).join("");
+
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650">
+          <defs>
+            <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="#0d4f83"/>
+              <stop offset="1" stop-color="#1a78bd"/>
+            </linearGradient>
+          </defs>
+          <rect width="1000" height="650" fill="#f6fbff"/>
+          <rect x="42" y="42" width="916" height="566" rx="30" fill="#ffffff" stroke="#d9e7f2" stroke-width="3"/>
+          <rect x="42" y="42" width="916" height="118" rx="30" fill="url(#g)"/>
+          <text x="80" y="93" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#ffffff">CHECKLIST DE PRONTUÁRIO</text>
+          <text x="80" y="130" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#ffffff">${escapeXml(referenceTitle)}</text>
+          <circle cx="870" cy="101" r="35" fill="#ffffff" opacity="0.98"/>
+          <path d="M854 101l11 12 23-29" fill="none" stroke="#0d5c95" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="80" y="208" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" fill="#0d5c95">Item selecionado</text>
+          ${textLines}
+          <rect x="80" y="520" width="840" height="1.5" fill="#b9c9d7"/>
+          <text x="80" y="560" font-family="Arial, Helvetica, sans-serif" font-size="17" fill="#5b6872">Imagem de referência gerada para conferência visual do item clicado.</text>
+        </svg>`;
+      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
     }
 
     function renderInfo(checklist) {
@@ -385,12 +542,17 @@
       document.getElementById("noticeBox").innerHTML = checklist.notice ? `<div class="notice-box">${escapeHtml(checklist.notice)}</div>` : "";
 
       document.getElementById("checklistContent").innerHTML = checklist.sections.map((section) => {
-        const items = section.items.map((item) => `
-          <li class="item">
-            <span class="item-circle" aria-hidden="true"></span>
-            <span class="item-text">${itemHtml(item)}</span>
-          </li>
-        `).join("");
+        const items = section.items.map((item) => {
+          const text = getItemText(item);
+          return `
+            <li class="item">
+              <button class="item-row" type="button" data-item-text="${escapeHtml(text)}" aria-label="Abrir imagem referente a: ${escapeHtml(text)}">
+                <span class="item-circle" aria-hidden="true"></span>
+                <span class="item-text">${itemHtml(item)}</span>
+              </button>
+            </li>
+          `;
+        }).join("");
         return `
           <section class="section${section.span ? " span-2" : ""}">
             <div class="section-title">${escapeHtml(section.title)}</div>
@@ -399,6 +561,62 @@
         `;
       }).join("");
     }
+
+    function openModal(itemText, triggerElement) {
+      const overlay = document.getElementById("imageModal");
+      const modalImg = document.getElementById("modalImg");
+      const modalFallback = document.getElementById("modalFallback");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalCaption = document.getElementById("modalCaption");
+      if (!overlay || !modalImg) return;
+
+      document.querySelectorAll(".item.active").forEach((item) => item.classList.remove("active"));
+      const itemElement = triggerElement ? triggerElement.closest(".item") : null;
+      if (itemElement) itemElement.classList.add("active");
+
+      const referenceTitle = getReferenceTitle(itemText);
+      modalTitle.textContent = referenceTitle;
+      modalCaption.textContent = itemText;
+      modalFallback.style.display = "none";
+      modalImg.style.display = "block";
+      modalImg.src = buildReferenceImage(itemText);
+      modalImg.onerror = function () {
+        modalImg.style.display = "none";
+        modalFallback.style.display = "block";
+      };
+
+      overlay.classList.add("show");
+      overlay.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      const closeButton = document.getElementById("modalClose");
+      if (closeButton) closeButton.focus({ preventScroll: true });
+    }
+
+    function closeModal() {
+      const overlay = document.getElementById("imageModal");
+      const modalImg = document.getElementById("modalImg");
+      if (!overlay) return;
+      overlay.classList.remove("show");
+      overlay.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      if (modalImg) modalImg.src = "";
+    }
+
+    document.getElementById("checklistContent").addEventListener("click", function (event) {
+      const row = event.target.closest(".item-row");
+      if (!row) return;
+      openModal(row.dataset.itemText || row.textContent.trim(), row);
+    });
+
+    document.getElementById("imageModal").addEventListener("click", function (event) {
+      if (event.target === this) closeModal();
+    });
+
+    document.getElementById("modalClose").addEventListener("click", closeModal);
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeModal();
+    });
 
     document.getElementById("checklistType").addEventListener("change", function () {
       renderChecklist(this.value);
