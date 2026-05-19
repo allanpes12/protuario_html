@@ -34,13 +34,22 @@
     .item-text strong { font-weight: 800; }
     .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 22px; background: rgba(0, 29, 51, .68); }
     .modal-overlay.show { display: flex; }
-    .modal-content { width: min(940px, 96vw); max-height: 92vh; overflow: hidden; background: #fff; border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.36); }
+    .modal-content { width: min(1180px, 96vw); max-height: 92vh; overflow: hidden; background: #fff; border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.36); display: flex; flex-direction: column; }
     .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; border-bottom: 1px solid #e7edf3; background: #f8fbfe; }
     .modal-title { color: #0d5c95; font-size: 15px; font-weight: 800; line-height: 1.25; }
     .modal-close { border: 0; border-radius: 999px; background: #0d5c95; color: #fff; font-weight: 800; padding: 9px 14px; cursor: pointer; }
     .modal-close:hover, .modal-close:focus-visible { background: #0a4774; }
-    .modal-body { padding: 18px; background: #fff; display: flex; align-items: center; justify-content: center; }
-    .modal-body img { display: block; max-width: 100%; max-height: 72vh; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.12); }
+    .modal-body { padding: 18px; background: #fff; overflow: auto; }
+    .modal-images { width: 100%; }
+    .image-carousel { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 4px 12px; }
+    .image-frame { flex: 0 0 100%; scroll-snap-align: center; border: 1px solid #dfe8f0; border-radius: 14px; background: #f8fbfe; padding: 10px; min-height: 220px; display: flex; align-items: center; justify-content: center; }
+    .image-frame img { display: block; width: 100%; max-height: 68vh; object-fit: contain; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.12); background: #fff; }
+    .image-frame .image-error { display: none; width: 100%; padding: 42px 18px; border: 2px dashed #1a78bd; border-radius: 12px; color: #0d5c95; text-align: center; font-weight: 700; }
+    .carousel-toolbar { display: none; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; }
+    .carousel-toolbar.show { display: flex; }
+    .carousel-toolbar button { border: 0; border-radius: 999px; background: #0d5c95; color: #fff; font-weight: 800; padding: 9px 14px; cursor: pointer; }
+    .carousel-toolbar button:hover, .carousel-toolbar button:focus-visible { background: #0a4774; }
+    .carousel-hint { color: #5b6872; font-size: 12px; font-weight: 700; }
     .modal-caption { padding: 12px 18px 18px; color: #444; font-size: 13px; line-height: 1.4; background: #fff; border-top: 1px solid #eef2f5; }
     .modal-fallback { display: none; width: 100%; padding: 48px 22px; border: 2px dashed #1a78bd; border-radius: 14px; background: #f4f9fd; color: #0d5c95; text-align: center; font-weight: 700; }
     footer { margin-top: 34px; border-top: 1px solid #d6d6d6; padding-top: 18px; font-size: 14px; }
@@ -115,8 +124,13 @@
         <button type="button" id="modalClose" class="modal-close">Voltar</button>
       </div>
       <div class="modal-body">
-        <img id="modalImg" src="" alt="Imagem referente ao item selecionado" />
+        <div id="modalImages" class="modal-images"></div>
         <div id="modalFallback" class="modal-fallback">Imagem não encontrada para este item.</div>
+        <div id="carouselToolbar" class="carousel-toolbar" aria-label="Navegação do carrossel">
+          <button type="button" id="carouselPrev">Anterior</button>
+          <span class="carousel-hint">Arraste para o lado ou use os botões</span>
+          <button type="button" id="carouselNext">Próxima</button>
+        </div>
       </div>
       <div id="modalCaption" class="modal-caption"></div>
     </div>
@@ -405,125 +419,118 @@
       return typeof item === "object" && item.bold ? `<strong>${safe}</strong>` : safe;
     }
 
-    function escapeXml(value) {
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&apos;");
-    }
-
     function normalizeText(value) {
-      return String(value)
-        .toLowerCase()
+      return String(value || "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, " ")
+        .toLowerCase()
+        .replace(/[–—]/g, "-")
+        .replace(/[^a-z0-9\s-]/g, " ")
+        .replace(/\s+/g, " ")
         .trim();
     }
 
-    function wrapText(text, maxChars, maxLines) {
-      const words = String(text).split(/\s+/).filter(Boolean);
-      const lines = [];
-      let current = "";
 
-      words.forEach((word) => {
-        const next = current ? `${current} ${word}` : word;
-        if (next.length > maxChars && current) {
-          lines.push(current);
-          current = word;
-        } else {
-          current = next;
-        }
-      });
+    const CIMG = "imagens/checklist/";
 
-      if (current) lines.push(current);
-      if (lines.length > maxLines) {
-        const visible = lines.slice(0, maxLines);
-        visible[maxLines - 1] = visible[maxLines - 1].replace(/[.,;:]?$/, "") + "...";
-        return visible;
-      }
-      return lines;
-    }
-
-    const imageRules = [
-      { keys: ["acolhimento", "classificacao de risco"], title: "Ficha de acolhimento e classificação de risco" },
-      { keys: ["aih", "internacao hospitalar", "operadora"], title: "AIH / Guia de Autorização da Operadora" },
-      { keys: ["sisreg"], title: "Guia / Autorização SISREG" },
-      { keys: ["anamnese"], title: "Anamnese do paciente" },
-      { keys: ["sumario", "resumo de alta"], title: "Sumário / Resumo de alta hospitalar" },
-      { keys: ["evolucao medica", "evolucoes medicas", "intensivista", "diarista"], title: "Evolução médica" },
-      { keys: ["prescricao de alta"], title: "Prescrição de alta médica" },
-      { keys: ["prescricao de hemodialise", "hemodialise"], title: "Prescrição de hemodiálise" },
-      { keys: ["prescricao medica", "prescricao do recem nascido"], title: "Prescrição médica" },
-      { keys: ["descricao cirurgica", "partograma", "procedimentos"], title: "Descrição cirúrgica / Partograma" },
-      { keys: ["relatorio de anestesia", "anestesia"], title: "Relatório de anestesia" },
-      { keys: ["pre anestesica"], title: "Avaliação pré-anestésica" },
-      { keys: ["produtos por atendimento", "aviso de cirurgia", "folha de gastos"], title: "Aviso de cirurgia / Folha de gastos" },
-      { keys: ["srpa"], title: "Ficha de acompanhamento na SRPA" },
-      { keys: ["enfermagem perioperatoria"], title: "Enfermagem perioperatória" },
-      { keys: ["cirurgia segura"], title: "Cirurgia segura" },
-      { keys: ["integrador quimico"], title: "Integrador químico" },
-      { keys: ["opme"], title: "Registro de utilização de OPME" },
-      { keys: ["anatomopatologico"], title: "Solicitação de exame anatomopatológico" },
-      { keys: ["exames laboratoriais", "exames de imagem", "resultado", "tomografia", "apac", "exames do recem nascido"], title: "Exames / Resultados anexados" },
-      { keys: ["fisioterapia"], title: "Evolução da fisioterapia" },
-      { keys: ["evolucao de enfermagem", "registro diario"], title: "Evolução de enfermagem" },
-      { keys: ["identificacao do rn", "ficha amarela", "pezinho"], title: "Identificação do recém-nascido" },
-      { keys: ["recepcao do rn"], title: "Ficha de recepção do RN" },
-      { keys: ["evolucao medica do rn"], title: "Evolução médica do RN" },
-      { keys: ["declaracao de nascido vivo"], title: "Declaração de nascido vivo" },
-      { keys: ["certidao de nascimento"], title: "Certidão de nascimento" },
-      { keys: ["laqueadura", "vasectomia"], title: "Planejamento familiar" },
-      { keys: ["cardiotocografia"], title: "Cardiotocografia fetal" },
-      { keys: ["laboratorio"], title: "Ficha de recepção do laboratório" },
-      { keys: ["autorizacao guia do exame", "guia do exame"], title: "Autorização / Guia do exame" },
-      { keys: ["procedimentos ambulatoriais"], title: "Autorização de procedimento ambulatorial" },
-      { keys: ["cateter", "picc", "traqueostomia", "drenagem de torax"], title: "Procedimentos e dispositivos" },
-      { keys: ["eletrocardiograma"], title: "Eletrocardiograma" },
-      { keys: ["contrato"], title: "Contrato de prestação de serviços" },
-      { keys: ["termo de esclarecimento", "declaracao e responsabilidade"], title: "Termo de esclarecimento e responsabilidade" },
-      { keys: ["consentimento"], title: "Termo de consentimento" },
-      { keys: ["documento do paciente"], title: "Documento do paciente" },
-      { keys: ["responsavel"], title: "Documento do responsável" }
+    const itemImageRules = [
+      { title: "Cirurgia segura e Integrador químico", match: "all", keys: ["cirurgia segura", "integrador quimico"], images: [CIMG + "cirurgia_segura.png", CIMG + "integrador_quimico.png"] },
+      { title: "Identificação do RN / Pezinho", match: "all", keys: ["identificacao do rn", "pezinho"], images: [CIMG + "folha_amarela_rn.png", CIMG + "evolucao_enferm_rg_pezinho.png"] },
+      { title: "Relatório de produtos / Aviso de cirurgia", match: "any", keys: ["relatorio de produtos por atendimento", "aviso de cirurgia", "folha de gastos"], images: [CIMG + "relatorio_anesteisa_aviso_cirurgia.png", CIMG + "folha_de_gasto.png"] },
+      { title: "Relatório de anestesia", match: "any", keys: ["relatorio de anestesia", "anestesia"], images: [CIMG + "relatorio_anesteisa_0001.png", CIMG + "relatorio_anesteisa_0002.png"] },
+      { title: "Contrato de prestação de serviços", match: "any", keys: ["contrato de prestacao"], images: [CIMG + "contrato_prestacao_servico_0001.png", CIMG + "contrato_prestacao_servico_0002.png"] },
+      { title: "Termo de esclarecimento e responsabilidade", match: "any", keys: ["termo de esclarecimento", "declaracao e responsabilidade"], images: [CIMG + "termo_de_esclarecimento_0001.png", CIMG + "termo_de_esclarecimento_0002.png"] },
+      { title: "Ficha de recepção do RN", match: "any", keys: ["ficha de recepcao do rn"], images: [CIMG + "ficha_de_recpcao_rn_0001.png", CIMG + "ficha_de_recpcao_rn_0002.png"] },
+      { title: "Ficha de admissão da UTI neonatal", match: "any", keys: ["ficha de admissao da uti"], images: [CIMG + "ficha_admissao_uti_neo_0001.png", CIMG + "ficha_admissao_uti_neo_0002.png"] },
+      { title: "Ficha de acompanhamento na SRPA", match: "any", keys: ["srpa"], images: [CIMG + "srpa_0001.png", CIMG + "srpa_0002.png"] },
+      { title: "Enfermagem perioperatória", match: "any", keys: ["enfermagem perioperatoria"], images: [CIMG + "enfermagem_perioperatoria_0001.png", CIMG + "enfermagem_perioperatoria_0002.png"] },
+      { title: "Sumário / Resumo de alta hospitalar", match: "any", keys: ["sumario", "resumo de alta"], images: [CIMG + "sumario_resumo_alta.png", CIMG + "relatorio_de_alta.png"] },
+      { title: "Anamnese do paciente", match: "any", keys: ["anamnese"], images: [CIMG + "anamnese_do_paciente.png", CIMG + "anamnese.png"] },
+      { title: "Laudo de Solicitação de AIH", match: "any", keys: ["aih", "internacao hospitalar", "operadora"], images: [CIMG + "laudo_solicitacao_aih.jpg"] },
+      { title: "Guia / Autorização SISREG", match: "any", keys: ["sisreg"], images: [CIMG + "sisreg.webp"] },
+      { title: "Prescrição do recém-nascido", match: "any", keys: ["prescricao do recem nascido", "prescricao do recem-nascido", "prescricao do rn"], images: [CIMG + "prescricao_do_rn.png"] },
+      { title: "Prescrição médica", match: "any", keys: ["prescricao medica", "prescricao de alta", "prescricao de hemodialise"], images: [CIMG + "prescricao_medica.png"] },
+      { title: "Descrição cirúrgica", match: "any", keys: ["descricao cirurgica", "partograma", "cateteres", "picc", "traqueostomia", "drenagem de torax"], images: [CIMG + "descricao_cirurgica.png"] },
+      { title: "Formulário de avaliação pré-anestésica", match: "any", keys: ["pre anestesica"], images: [CIMG + "formulario_de_avaliacao_pre_anestesica.png"] },
+      { title: "Verificação de cirurgia segura", match: "any", keys: ["verificacao de cirurgia segura", "checklist pre operatorio"], images: [CIMG + "cirurgia_segura_checklist_pre_operatorio.png"] },
+      { title: "Cirurgia segura", match: "any", keys: ["cirurgia segura"], images: [CIMG + "cirurgia_segura.png"] },
+      { title: "Integrador químico", match: "any", keys: ["integrador quimico"], images: [CIMG + "integrador_quimico.png"] },
+      { title: "Evolução de enfermagem com registro do pezinho", match: "any", keys: ["registro do pezinho", "pezinho"], images: [CIMG + "evolucao_enferm_rg_pezinho.png"] },
+      { title: "Identificação do RN", match: "any", keys: ["identificacao do rn", "ficha amarela", "folhinha amarela"], images: [CIMG + "folha_amarela_rn.png"] },
+      { title: "Evolução médica do RN", match: "any", keys: ["evolucao medica do rn"], images: [CIMG + "evolucao_medica.png"] },
+      { title: "Evolução médica", match: "any", keys: ["evolucao medica", "evolucoes medicas", "intensivista", "diarista", "permanencia"], images: [CIMG + "evolucao_medica.png"] },
+      { title: "Evolução de enfermagem", match: "any", keys: ["evolucao de enfermagem", "registro diario"], images: [CIMG + "evolucao_enfermagem_registro_diario.png"] },
+      { title: "Evolução da fisioterapia", match: "any", keys: ["fisioterapia"], images: [CIMG + "evolucao_da_fisioterapia.png"] },
+      { title: "Declaração de nascido vivo", match: "any", keys: ["declaracao de nascido vivo"], images: [CIMG + "declaracao_de_nascido_vivo.jpg"] },
+      { title: "Certidão de nascimento", match: "any", keys: ["certidao de nascimento"], images: [CIMG + "certidao_de_nascimento.jpg"] },
+      { title: "Documento com foto", match: "any", keys: ["documento do paciente", "documento com foto", "documento do responsavel"], images: [CIMG + "documento_com_foto.png"] }
     ];
 
-    function getReferenceTitle(itemText) {
-      const normalized = normalizeText(itemText);
-      const rule = imageRules.find((entry) => entry.keys.some((key) => normalized.includes(key)));
-      return rule ? rule.title : "Documento do checklist";
+    function ruleMatches(rule, normalizedText) {
+      const keys = rule.keys.map((key) => normalizeText(key));
+      if (rule.match === "all") return keys.every((key) => normalizedText.includes(key));
+      return keys.some((key) => normalizedText.includes(key));
     }
 
-    function buildReferenceImage(itemText) {
-      const referenceTitle = getReferenceTitle(itemText);
-      const lines = wrapText(itemText, 58, 7);
-      const textLines = lines.map((line, index) => {
-        const y = 250 + index * 34;
-        return `<text x="80" y="${y}" font-family="Arial, Helvetica, sans-serif" font-size="21" fill="#26343d">${escapeXml(line)}</text>`;
-      }).join("");
+    function getReferenceData(itemText) {
+      const normalized = normalizeText(itemText);
+      const rule = itemImageRules.find((entry) => ruleMatches(entry, normalized));
+      if (!rule) return { title: "Documento do checklist", images: [] };
+      return { title: rule.title, images: rule.images };
+    }
 
-      const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650">
-          <defs>
-            <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0" stop-color="#0d4f83"/>
-              <stop offset="1" stop-color="#1a78bd"/>
-            </linearGradient>
-          </defs>
-          <rect width="1000" height="650" fill="#f6fbff"/>
-          <rect x="42" y="42" width="916" height="566" rx="30" fill="#ffffff" stroke="#d9e7f2" stroke-width="3"/>
-          <rect x="42" y="42" width="916" height="118" rx="30" fill="url(#g)"/>
-          <text x="80" y="93" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" fill="#ffffff">CHECKLIST DE PRONTUÁRIO</text>
-          <text x="80" y="130" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#ffffff">${escapeXml(referenceTitle)}</text>
-          <circle cx="870" cy="101" r="35" fill="#ffffff" opacity="0.98"/>
-          <path d="M854 101l11 12 23-29" fill="none" stroke="#0d5c95" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-          <text x="80" y="208" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" fill="#0d5c95">Item selecionado</text>
-          ${textLines}
-          <rect x="80" y="520" width="840" height="1.5" fill="#b9c9d7"/>
-          <text x="80" y="560" font-family="Arial, Helvetica, sans-serif" font-size="17" fill="#5b6872">Imagem de referência gerada para conferência visual do item clicado.</text>
-        </svg>`;
-      return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    function renderModalImages(images, itemText) {
+      const modalImages = document.getElementById("modalImages");
+      const modalFallback = document.getElementById("modalFallback");
+      const toolbar = document.getElementById("carouselToolbar");
+      if (!modalImages || !modalFallback) return;
+
+      modalImages.innerHTML = "";
+      modalFallback.style.display = "none";
+      if (toolbar) toolbar.classList.remove("show");
+
+      if (!images || !images.length) {
+        modalFallback.style.display = "block";
+        modalFallback.textContent = "Nenhuma imagem foi vinculada para este item.";
+        return;
+      }
+
+      const carousel = document.createElement("div");
+      carousel.className = "image-carousel";
+      carousel.id = "imageCarousel";
+
+      images.forEach((src, index) => {
+        const frame = document.createElement("figure");
+        frame.className = "image-frame";
+
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = `${itemText} - imagem ${index + 1}`;
+        img.loading = "lazy";
+        img.onerror = function () {
+          img.style.display = "none";
+          const error = frame.querySelector(".image-error");
+          if (error) error.style.display = "block";
+        };
+
+        const error = document.createElement("div");
+        error.className = "image-error";
+        error.textContent = "Imagem não encontrada no pacote.";
+
+        frame.appendChild(img);
+        frame.appendChild(error);
+        carousel.appendChild(frame);
+      });
+
+      modalImages.appendChild(carousel);
+      if (toolbar && images.length > 1) toolbar.classList.add("show");
+    }
+
+    function moveCarousel(direction) {
+      const carousel = document.getElementById("imageCarousel");
+      if (!carousel) return;
+      const amount = carousel.clientWidth * direction;
+      carousel.scrollBy({ left: amount, behavior: "smooth" });
     }
 
     function renderInfo(checklist) {
@@ -562,28 +569,21 @@
       }).join("");
     }
 
+
     function openModal(itemText, triggerElement) {
       const overlay = document.getElementById("imageModal");
-      const modalImg = document.getElementById("modalImg");
-      const modalFallback = document.getElementById("modalFallback");
       const modalTitle = document.getElementById("modalTitle");
       const modalCaption = document.getElementById("modalCaption");
-      if (!overlay || !modalImg) return;
+      if (!overlay) return;
 
       document.querySelectorAll(".item.active").forEach((item) => item.classList.remove("active"));
       const itemElement = triggerElement ? triggerElement.closest(".item") : null;
       if (itemElement) itemElement.classList.add("active");
 
-      const referenceTitle = getReferenceTitle(itemText);
-      modalTitle.textContent = referenceTitle;
+      const referenceData = getReferenceData(itemText);
+      modalTitle.textContent = referenceData.title;
       modalCaption.textContent = itemText;
-      modalFallback.style.display = "none";
-      modalImg.style.display = "block";
-      modalImg.src = buildReferenceImage(itemText);
-      modalImg.onerror = function () {
-        modalImg.style.display = "none";
-        modalFallback.style.display = "block";
-      };
+      renderModalImages(referenceData.images, itemText);
 
       overlay.classList.add("show");
       overlay.setAttribute("aria-hidden", "false");
@@ -594,12 +594,12 @@
 
     function closeModal() {
       const overlay = document.getElementById("imageModal");
-      const modalImg = document.getElementById("modalImg");
+      const modalImages = document.getElementById("modalImages");
       if (!overlay) return;
       overlay.classList.remove("show");
       overlay.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
-      if (modalImg) modalImg.src = "";
+      if (modalImages) modalImages.innerHTML = "";
     }
 
     document.getElementById("checklistContent").addEventListener("click", function (event) {
@@ -613,6 +613,8 @@
     });
 
     document.getElementById("modalClose").addEventListener("click", closeModal);
+    document.getElementById("carouselPrev").addEventListener("click", function () { moveCarousel(-1); });
+    document.getElementById("carouselNext").addEventListener("click", function () { moveCarousel(1); });
 
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") closeModal();
