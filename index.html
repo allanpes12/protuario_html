@@ -40,6 +40,8 @@
     .modal-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
     .modal-action, .modal-close { border: 0; border-radius: 999px; background: #0d5c95; color: #fff; font-weight: 800; padding: 9px 13px; cursor: pointer; font-size: 13px; }
     .modal-action.secondary { background: #e8f1f8; color: #0d5c95; border: 1px solid #bed6e8; }
+    .modal-action.upload { background: #0f6fa9; color: #fff; }
+    #imageFileInput { display: none; }
     .modal-action:hover, .modal-action:focus-visible, .modal-close:hover, .modal-close:focus-visible { background: #0a4774; color: #fff; }
     .zoom-value { min-width: 52px; text-align: center; color: #0d5c95; font-size: 13px; font-weight: 800; }
     .modal-body { padding: 18px; background: #fff; overflow: auto; }
@@ -135,6 +137,10 @@
           <span id="zoomValue" class="zoom-value">100%</span>
           <button type="button" id="zoomIn" class="modal-action secondary" title="Aumentar zoom">+</button>
           <button type="button" id="zoomReset" class="modal-action secondary" title="Restaurar imagem">Ajustar</button>
+          <button type="button" id="addImageBtn" class="modal-action upload" title="Adicionar nova imagem ao item">Adicionar imagem</button>
+          <button type="button" id="replaceImageBtn" class="modal-action secondary" title="Substituir a imagem atual">Substituir atual</button>
+          <button type="button" id="removeCustomImageBtn" class="modal-action secondary" title="Remover a imagem personalizada atual">Remover personalizada</button>
+          <input type="file" id="imageFileInput" accept="image/*" multiple />
           <button type="button" id="modalClose" class="modal-close">Voltar</button>
         </div>
       </div>
@@ -494,6 +500,224 @@
       return { title: rule.title, images: rule.images };
     }
 
+    const CUSTOM_IMAGE_DB_NAME = "checklist-prontuario-imagens";
+    const CUSTOM_IMAGE_DB_VERSION = 1;
+    const CUSTOM_IMAGE_STORE = "imagensPorItem";
+    const CUSTOM_IMAGE_STORAGE_PREFIX = "checklist-prontuario-imagem::";
+
+    let currentModalState = null;
+    let pendingImageAction = null;
+
+    function defaultCustomImageRecord() {
+      return { additions: [], replacements: {} };
+    }
+
+    function normalizeCustomImageRecord(record) {
+      return {
+        additions: Array.isArray(record && record.additions) ? record.additions : [],
+        replacements: record && typeof record.replacements === "object" && record.replacements ? record.replacements : {}
+      };
+    }
+
+    function openChecklistImageDb() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+          reject(new Error("IndexedDB indisponível neste navegador."));
+          return;
+        }
+
+        const request = window.indexedDB.open(CUSTOM_IMAGE_DB_NAME, CUSTOM_IMAGE_DB_VERSION);
+
+        request.onupgradeneeded = function () {
+          const db = request.result;
+          if (!db.objectStoreNames.contains(CUSTOM_IMAGE_STORE)) {
+            db.createObjectStore(CUSTOM_IMAGE_STORE);
+          }
+        };
+
+        request.onsuccess = function () { resolve(request.result); };
+        request.onerror = function () { reject(request.error || new Error("Falha ao abrir o banco local de imagens.")); };
+      });
+    }
+
+    async function getCustomImageRecord(itemKey) {
+      try {
+        const db = await openChecklistImageDb();
+        return await new Promise((resolve, reject) => {
+          const tx = db.transaction(CUSTOM_IMAGE_STORE, "readonly");
+          const store = tx.objectStore(CUSTOM_IMAGE_STORE);
+          const request = store.get(itemKey);
+          request.onsuccess = function () {
+            const record = request.result || defaultCustomImageRecord();
+            resolve(normalizeCustomImageRecord(record));
+          };
+          request.onerror = function () { reject(request.error); };
+          tx.oncomplete = function () { db.close(); };
+          tx.onerror = function () { db.close(); };
+        });
+      } catch (error) {
+        try {
+          const raw = window.localStorage.getItem(CUSTOM_IMAGE_STORAGE_PREFIX + itemKey);
+          return normalizeCustomImageRecord(raw ? JSON.parse(raw) : null);
+        } catch (fallbackError) {
+          console.warn("Não foi possível carregar imagens personalizadas.", error, fallbackError);
+          return defaultCustomImageRecord();
+        }
+      }
+    }
+
+    async function saveCustomImageRecord(itemKey, record) {
+      const normalizedRecord = normalizeCustomImageRecord(record);
+      try {
+        const db = await openChecklistImageDb();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(CUSTOM_IMAGE_STORE, "readwrite");
+          const store = tx.objectStore(CUSTOM_IMAGE_STORE);
+          store.put(normalizedRecord, itemKey);
+          tx.oncomplete = function () { db.close(); resolve(); };
+          tx.onerror = function () { db.close(); reject(tx.error); };
+          tx.onabort = function () { db.close(); reject(tx.error); };
+        });
+        return;
+      } catch (error) {
+        try {
+          window.localStorage.setItem(CUSTOM_IMAGE_STORAGE_PREFIX + itemKey, JSON.stringify(normalizedRecord));
+          return;
+        } catch (fallbackError) {
+          console.error("Falha ao salvar imagem personalizada.", error, fallbackError);
+          throw fallbackError;
+        }
+      }
+    }
+
+    function composeImageEntries(baseImages, customRecord) {
+      const record = normalizeCustomImageRecord(customRecord);
+      const replacements = record.replacements || {};
+      const additions = record.additions || [];
+
+      const baseEntries = (baseImages || []).map((src, index) => ({
+        src: replacements[String(index)] || src,
+        imageIndex: index,
+        kind: replacements[String(index)] ? "replacement" : "base"
+      }));
+
+      const additionEntries = additions.map((src, index) => ({
+        src,
+        imageIndex: (baseImages || []).length + index,
+        customIndex: index,
+        kind: "addition"
+      }));
+
+      return baseEntries.concat(additionEntries);
+    }
+
+    function getCurrentImageIndex() {
+      const frame = getCurrentFrame();
+      if (!frame || frame.dataset.imageIndex === undefined) return null;
+      const index = Number(frame.dataset.imageIndex);
+      return Number.isFinite(index) ? index : null;
+    }
+
+    function readImageFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !file.type || !file.type.startsWith("image/")) {
+          reject(new Error("Selecione apenas arquivos de imagem."));
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function () { resolve(reader.result); };
+        reader.onerror = function () { reject(reader.error || new Error("Falha ao ler a imagem.")); };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function refreshCurrentModalImages() {
+      if (!currentModalState) return;
+      resetAllZoom();
+      const entries = composeImageEntries(currentModalState.baseImages, currentModalState.customRecord);
+      renderModalImages(entries, currentModalState.itemText);
+    }
+
+    function chooseImageFile(action) {
+      if (!currentModalState) return;
+      pendingImageAction = action;
+      const input = document.getElementById("imageFileInput");
+      if (!input) return;
+      input.value = "";
+      input.multiple = action === "add";
+      input.click();
+    }
+
+    async function handleSelectedImageFiles(files) {
+      if (!currentModalState || !pendingImageAction || !files || !files.length) return;
+
+      try {
+        const selectedImages = await Promise.all(Array.from(files).map(readImageFileAsDataUrl));
+        const record = normalizeCustomImageRecord(currentModalState.customRecord);
+
+        if (pendingImageAction === "add") {
+          record.additions.push(...selectedImages);
+        }
+
+        if (pendingImageAction === "replace") {
+          const currentIndex = getCurrentImageIndex();
+          if (currentIndex === null) {
+            alert("Não há imagem atual para substituir. Use Adicionar imagem.");
+            return;
+          }
+
+          if (currentIndex < currentModalState.baseImages.length) {
+            record.replacements[String(currentIndex)] = selectedImages[0];
+          } else {
+            const additionIndex = currentIndex - currentModalState.baseImages.length;
+            record.additions[additionIndex] = selectedImages[0];
+          }
+        }
+
+        await saveCustomImageRecord(currentModalState.itemKey, record);
+        currentModalState.customRecord = record;
+        refreshCurrentModalImages();
+      } catch (error) {
+        console.error(error);
+        alert("Não foi possível salvar a imagem selecionada. Tente uma imagem menor ou outro arquivo.");
+      } finally {
+        pendingImageAction = null;
+      }
+    }
+
+    async function removeCurrentCustomImage() {
+      if (!currentModalState) return;
+      const currentIndex = getCurrentImageIndex();
+      if (currentIndex === null) {
+        alert("Não há imagem personalizada selecionada para remover.");
+        return;
+      }
+
+      const record = normalizeCustomImageRecord(currentModalState.customRecord);
+
+      if (currentIndex < currentModalState.baseImages.length) {
+        if (!record.replacements[String(currentIndex)]) {
+          alert("A imagem atual é a imagem original do pacote. Use Substituir atual para trocar.");
+          return;
+        }
+        delete record.replacements[String(currentIndex)];
+      } else {
+        const additionIndex = currentIndex - currentModalState.baseImages.length;
+        if (additionIndex < 0 || additionIndex >= record.additions.length) return;
+        record.additions.splice(additionIndex, 1);
+      }
+
+      try {
+        await saveCustomImageRecord(currentModalState.itemKey, record);
+        currentModalState.customRecord = record;
+        refreshCurrentModalImages();
+      } catch (error) {
+        console.error(error);
+        alert("Não foi possível remover a imagem personalizada.");
+      }
+    }
+
     const ZOOM_MIN = 1;
     const ZOOM_MAX = 5;
     const ZOOM_STEP = 0.25;
@@ -671,9 +895,15 @@
       modalFallback.style.display = "none";
       if (toolbar) toolbar.classList.remove("show");
 
-      if (!images || !images.length) {
+      const imageEntries = (images || []).map((entry, index) => (
+        typeof entry === "string"
+          ? { src: entry, imageIndex: index, kind: "base" }
+          : entry
+      ));
+
+      if (!imageEntries.length) {
         modalFallback.style.display = "block";
-        modalFallback.textContent = "Nenhuma imagem foi vinculada para este item.";
+        modalFallback.textContent = "Nenhuma imagem foi vinculada para este item. Clique em Adicionar imagem para incluir uma referência.";
         return;
       }
 
@@ -681,15 +911,17 @@
       carousel.className = "image-carousel";
       carousel.id = "imageCarousel";
 
-      images.forEach((src, index) => {
+      imageEntries.forEach((entry, index) => {
         const frame = document.createElement("figure");
         frame.className = "image-frame";
         frame.dataset.scale = "1";
         frame.dataset.x = "0";
         frame.dataset.y = "0";
+        frame.dataset.imageIndex = String(entry.imageIndex ?? index);
+        frame.dataset.imageKind = entry.kind || "base";
 
         const img = document.createElement("img");
-        img.src = src;
+        img.src = entry.src;
         img.alt = `${itemText} - imagem ${index + 1}`;
         img.loading = "lazy";
         img.onerror = function () {
@@ -713,7 +945,7 @@
       });
       modalImages.appendChild(carousel);
       updateZoomValue();
-      if (toolbar && images.length > 1) toolbar.classList.add("show");
+      if (toolbar && imageEntries.length > 1) toolbar.classList.add("show");
     }
 
     function moveCarousel(direction) {
@@ -761,7 +993,7 @@
     }
 
 
-    function openModal(itemText, triggerElement) {
+    async function openModal(itemText, triggerElement) {
       const overlay = document.getElementById("imageModal");
       const modalTitle = document.getElementById("modalTitle");
       const modalCaption = document.getElementById("modalCaption");
@@ -772,9 +1004,20 @@
       if (itemElement) itemElement.classList.add("active");
 
       const referenceData = getReferenceData(itemText);
+      const itemKey = normalizeText(itemText);
+      const customRecord = await getCustomImageRecord(itemKey);
+
+      currentModalState = {
+        itemText,
+        itemKey,
+        baseImages: referenceData.images || [],
+        customRecord,
+        title: referenceData.title
+      };
+
       modalTitle.textContent = referenceData.title;
       modalCaption.textContent = itemText;
-      renderModalImages(referenceData.images, itemText);
+      renderModalImages(composeImageEntries(currentModalState.baseImages, customRecord), itemText);
 
       overlay.classList.add("show");
       overlay.setAttribute("aria-hidden", "false");
@@ -792,6 +1035,8 @@
       overlay.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
       if (modalImages) modalImages.innerHTML = "";
+      currentModalState = null;
+      pendingImageAction = null;
       updateZoomValue();
     }
 
@@ -809,6 +1054,10 @@
     document.getElementById("zoomIn").addEventListener("click", function () { zoomCurrentImage(1); });
     document.getElementById("zoomOut").addEventListener("click", function () { zoomCurrentImage(-1); });
     document.getElementById("zoomReset").addEventListener("click", resetCurrentZoom);
+    document.getElementById("addImageBtn").addEventListener("click", function () { chooseImageFile("add"); });
+    document.getElementById("replaceImageBtn").addEventListener("click", function () { chooseImageFile("replace"); });
+    document.getElementById("removeCustomImageBtn").addEventListener("click", removeCurrentCustomImage);
+    document.getElementById("imageFileInput").addEventListener("change", function () { handleSelectedImageFiles(this.files); });
     document.getElementById("carouselPrev").addEventListener("click", function () { moveCarousel(-1); });
     document.getElementById("carouselNext").addEventListener("click", function () { moveCarousel(1); });
 
