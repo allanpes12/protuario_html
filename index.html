@@ -5,45 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Checklist de Prontuário - Santa Casa de Rondonópolis</title>
   <style>
+    :root {
+      --ink: #17324a;
+      --brand: #2d5fad;
+      --navy: #1c3f7a;
+      --navy-dark: #17324a;
+      --sky: #e6f4f8;
+      --line: #e3e3e3;
+      --danger: #d64545;
+      --danger-bg: #fdecea;
+      --green: #2b7a4b;
+      --green-bg: #dcefe1;
+      --orange: #e07b24;
+      --orange-bg: #fff6e9;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, Helvetica, sans-serif; background: #f5f5f5; color: #2f2f2f; padding: 20px; }
-    .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 38px 42px; box-shadow: 0 2px 8px rgba(0,0,0,.10); min-height: 100vh; }
-    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
-    h1 { font-size: 58px; line-height: .9; letter-spacing: 2px; color: #0c65a7; font-weight: 800; }
-    .logo-wrapper { width: 235px; display: flex; justify-content: flex-end; }
-    .logo-wrapper img { width: 210px; max-width: 100%; height: auto; display: block; }
-    .selector-wrapper { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; padding: 12px 14px; background: #eef6fc; border: 1px solid #d7e8f5; border-radius: 10px; }
-    .selector-wrapper label { font-weight: 700; color: #114c79; }
-    .selector-wrapper select { flex: 1; max-width: 430px; padding: 9px 12px; border: 1px solid #2b6f9f; border-radius: 8px; background: #fff; font-size: 14px; color: #333; }
-    .info-box { background: #eaf2fb; border-left: 5px solid #0d5c95; border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; font-size: 14px; line-height: 1.45; }
-    .info-box .type { color: #144b70; font-weight: 700; margin-bottom: 8px; }
-    .info-box ul { list-style: none; padding-left: 0; }
-    .info-box li { margin-top: 5px; }
-    .notice-box { border: 2px dashed #1d78b9; color: #154e75; border-radius: 8px; padding: 9px 12px; margin: -10px 0 18px; background: #fbfdff; font-size: 13px; line-height: 1.45; }
-    .checklist-content { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 28px; }
-    .section.span-2 { grid-column: 1 / -1; }
-    .section-title { color: #fff; font-weight: 700; font-size: 15px; padding: 12px 18px; border-radius: 999px; margin-bottom: 10px; background: linear-gradient(135deg, #0d4f83 0%, #1a78bd 100%); }
+    html { background: #edf2f6; }
+    body { min-width: 320px; font-family: "Museo Sans Rounded", "Arial Rounded MT Bold", Arial, Helvetica, sans-serif; background: #edf2f6; color: var(--ink); padding: 24px 16px 40px; }
+    button, select, input { font: inherit; }
+    .app-toolbar { width: min(100%, 210mm); margin: 0 auto 14px; }
+    .selector-wrapper { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,.94); border: 1px solid #d7e2eb; border-radius: 12px; box-shadow: 0 4px 16px rgba(23,50,74,.08); }
+    .selector-wrapper label { font-size: 13px; font-weight: 900; color: var(--navy); white-space: nowrap; }
+    .selector-wrapper select { flex: 1; min-width: 0; padding: 9px 36px 9px 12px; border: 1px solid #9ab3c8; border-radius: 8px; background: #fff; color: var(--ink); font-size: 13px; cursor: pointer; }
+    .container { width: min(100%, 210mm); min-height: 297mm; margin: 0 auto; background: #fff; padding: 16mm 16.2mm 14mm; box-shadow: 0 12px 40px rgba(23,50,74,.14); }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 14px; }
+    .header-copy { min-width: 0; padding-top: 2px; }
+    h1 { color: var(--brand); font-size: 45px; line-height: .92; letter-spacing: .6px; font-weight: 900; }
+    .checklist-subtitle { margin-top: 9px; color: var(--brand); font-size: 16px; line-height: 1.25; font-weight: 700; }
+    .logo-wrapper { width: 185px; display: flex; justify-content: flex-end; }
+    .logo-wrapper img { display: block; width: 175px; max-width: 100%; height: auto; }
+    .info-box { margin-bottom: 14px; padding: 12px 15px 12px 18px; background: var(--sky); border-left: 5px solid var(--navy-dark); border-radius: 0 8px 8px 0; font-size: 12.5px; line-height: 1.42; }
+    .guidance-list { list-style: none; display: grid; gap: 2px; }
+    .guidance-item { position: relative; padding-left: 13px; }
+    .guidance-item::before { content: "▲"; position: absolute; left: 0; top: .08em; color: var(--danger); font-size: 7px; }
+    .notice-box { margin: 7px 0 10px; padding: 7px 10px; border: 1.5px dashed var(--danger); border-radius: 6px; background: var(--danger-bg); color: var(--ink); font-size: 12px; line-height: 1.38; }
+    .notice-box strong { color: var(--danger); font-weight: 900; }
+    .checklist-intro-notice { margin: 0 0 12px; }
+    .checklist-content { display: block; }
+    .section { margin: 0 0 13px; break-inside: auto; }
+    .section-title { display: flex; align-items: center; min-height: 36px; margin-bottom: 5px; padding: 5px 14px 5px 7px; border-radius: 999px; background: linear-gradient(90deg, #30579b 0%, var(--navy) 100%); color: #fff; font-size: 14px; line-height: 1.2; font-weight: 900; }
+    .section-number { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; min-width: 22px; margin-right: 10px; border-radius: 50%; background: var(--navy-dark); color: #fff; font-size: 11px; }
     .items-list { list-style: none; }
-    .item { display: block; border-bottom: 1px solid #e4e4e4; font-size: 13.5px; line-height: 1.35; }
-    .item-row { display: flex; align-items: flex-start; gap: 13px; width: 100%; padding: 8px 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-    .item-row:hover .item-text, .item-row:focus-visible .item-text { color: #0d5c95; }
-    .item-row:focus-visible { outline: 2px solid #1a78bd; outline-offset: 3px; border-radius: 8px; }
-    .item-circle { width: 21px; height: 21px; min-width: 21px; border: 3px solid #1d5d8d; border-radius: 50%; background: #fff; margin-top: 1px; transition: background-color .15s ease, box-shadow .15s ease; }
-    .item.active .item-circle { background: #1d5d8d; box-shadow: inset 0 0 0 4px #fff; }
-    .item-text { flex: 1; }
-    .item-text strong { font-weight: 800; }
-    .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 22px; background: rgba(0, 29, 51, .68); }
+    .item { display: block; border-bottom: 1px solid var(--line); font-size: 12.5px; line-height: 1.35; }
+    .item-row { display: flex; align-items: flex-start; gap: 10px; width: 100%; min-height: 30px; padding: 7px 2px 7px 0; border: 0; border-radius: 4px; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+    .item-row:hover, .item-row:focus-visible { background: #f5f9fd; }
+    .item-row:hover .item-main, .item-row:focus-visible .item-main { color: var(--brand); }
+    .item-row:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+    .item-circle { width: 11px; height: 11px; min-width: 11px; margin: 2px 0 0 1px; border: 1.5px solid var(--brand); border-radius: 50%; background: #fff; transition: background-color .15s ease, box-shadow .15s ease; }
+    .item.active .item-circle { background: var(--brand); box-shadow: inset 0 0 0 2.5px #fff; }
+    .item-copy { min-width: 0; flex: 1; }
+    .item-main { transition: color .15s ease; }
+    .item-main strong { font-weight: 900; }
+    .item-tags { display: inline-flex; flex-wrap: wrap; gap: 3px; margin-left: 5px; vertical-align: 1px; }
+    .payer-tag { display: inline-flex; align-items: center; min-height: 16px; padding: 1px 5px; border-radius: 4px; background: var(--green-bg); color: var(--green); font-size: 10px; line-height: 1.05; font-weight: 900; text-transform: uppercase; }
+    .item-note { display: block; margin-top: 3px; padding-left: 15px; color: var(--brand); font-size: 11px; line-height: 1.35; }
+    .item-note::before { content: "⚑"; float: left; margin-left: -15px; color: var(--orange); font-size: 11px; }
+    .stage { margin: 12px 0 14px; }
+    .stage-title { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 10px; border-left: 5px solid var(--orange); border-radius: 0 6px 6px 0; background: var(--orange-bg); color: var(--ink); font-size: 15px; font-weight: 900; }
+    .stage-check { width: 11px; height: 11px; border: 1.5px solid var(--ink); border-radius: 2px; background: #fff; }
+    .stage-description { margin: 5px 0; padding: 8px 12px; border-radius: 5px; background: var(--sky); font-size: 12.5px; line-height: 1.42; }
+    .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 22px; background: rgba(23, 50, 74, .76); }
     .modal-overlay.show { display: flex; }
-    .modal-content { width: min(1180px, 96vw); max-height: 92vh; overflow: hidden; background: #fff; border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.36); display: flex; flex-direction: column; }
+    .modal-content { width: min(2000px, 96vw); max-height: 92vh; overflow: hidden; background: #fff; border-radius: 18px; box-shadow: 0 24px 70px rgba(0,0,0,.36); display: flex; flex-direction: column; }
     .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; border-bottom: 1px solid #e7edf3; background: #f8fbfe; }
-    .modal-title { color: #0d5c95; font-size: 15px; font-weight: 800; line-height: 1.25; }
+    .modal-title { color: var(--navy); font-size: 15px; font-weight: 900; line-height: 1.25; }
     .modal-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
-    .modal-action, .modal-close { border: 0; border-radius: 999px; background: #0d5c95; color: #fff; font-weight: 800; padding: 9px 13px; cursor: pointer; font-size: 13px; }
-    .modal-action.secondary { background: #e8f1f8; color: #0d5c95; border: 1px solid #bed6e8; }
-    .modal-action.upload { background: #0f6fa9; color: #fff; }
+    .modal-action, .modal-close { border: 0; border-radius: 999px; background: var(--navy); color: #fff; font-weight: 900; padding: 9px 13px; cursor: pointer; font-size: 13px; }
+    .modal-action.secondary { background: #e8f1f8; color: var(--navy); border: 1px solid #bed6e8; }
+    .modal-action.upload { background: var(--brand); color: #fff; }
     #imageFileInput { display: none; }
-    .modal-action:hover, .modal-action:focus-visible, .modal-close:hover, .modal-close:focus-visible { background: #0a4774; color: #fff; }
-    .zoom-value { min-width: 52px; text-align: center; color: #0d5c95; font-size: 13px; font-weight: 800; }
+    .modal-action:hover, .modal-action:focus-visible, .modal-close:hover, .modal-close:focus-visible { background: var(--navy-dark); color: #fff; }
+    .zoom-value { min-width: 52px; text-align: center; color: var(--navy); font-size: 13px; font-weight: 900; }
     .modal-body { padding: 18px; background: #fff; overflow: auto; }
     .modal-images { width: 100%; }
     .image-carousel { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 4px 12px; }
@@ -53,42 +85,41 @@
     .image-frame.is-dragging { cursor: grabbing; }
     .image-frame img { display: block; width: 100%; max-height: 68vh; object-fit: contain; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.12); background: #fff; transform-origin: center center; transition: transform .12s ease; will-change: transform; user-select: none; -webkit-user-drag: none; }
     .image-frame.is-dragging img { transition: none; }
-    .image-frame .image-error { display: none; width: 100%; padding: 42px 18px; border: 2px dashed #1a78bd; border-radius: 12px; color: #0d5c95; text-align: center; font-weight: 700; }
+    .image-frame .image-error { display: none; width: 100%; padding: 42px 18px; border: 2px dashed var(--brand); border-radius: 12px; color: var(--navy); text-align: center; font-weight: 700; }
     .carousel-toolbar { display: none; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; }
     .carousel-toolbar.show { display: flex; }
-    .carousel-toolbar button { border: 0; border-radius: 999px; background: #0d5c95; color: #fff; font-weight: 800; padding: 9px 14px; cursor: pointer; }
-    .carousel-toolbar button:hover, .carousel-toolbar button:focus-visible { background: #0a4774; }
+    .carousel-toolbar button { border: 0; border-radius: 999px; background: var(--navy); color: #fff; font-weight: 900; padding: 9px 14px; cursor: pointer; }
+    .carousel-toolbar button:hover, .carousel-toolbar button:focus-visible { background: var(--navy-dark); }
     .carousel-hint { color: #5b6872; font-size: 12px; font-weight: 700; }
     .modal-caption { padding: 12px 18px 18px; color: #444; font-size: 13px; line-height: 1.4; background: #fff; border-top: 1px solid #eef2f5; }
-    .modal-fallback { display: none; width: 100%; padding: 48px 22px; border: 2px dashed #1a78bd; border-radius: 14px; background: #f4f9fd; color: #0d5c95; text-align: center; font-weight: 700; }
-    footer { margin-top: 34px; border-top: 1px solid #d6d6d6; padding-top: 18px; font-size: 14px; }
-    .footer-field { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+    .modal-fallback { display: none; width: 100%; padding: 48px 22px; border: 2px dashed var(--brand); border-radius: 14px; background: #f4f9fd; color: var(--navy); text-align: center; font-weight: 700; }
+    footer { margin-top: 18px; font-size: 12.5px; color: var(--ink); }
+    .footer-field { display: flex; align-items: center; gap: 10px; margin: 11px 0; }
     .footer-field label { white-space: nowrap; color: #333; }
-    .footer-field .line { height: 1px; border-bottom: 2px solid #222; flex: 1; }
+    .footer-field .line { height: 1px; border-bottom: 1px solid var(--navy-dark); flex: 1; }
     @media (max-width: 760px) {
-      body { padding: 10px; }
-      .container { padding: 22px 18px; }
-      header { align-items: center; }
-      h1 { font-size: 38px; }
-      .logo-wrapper { width: 145px; }
-      .selector-wrapper { flex-direction: column; align-items: stretch; }
-      .selector-wrapper select { max-width: none; }
-      .checklist-content { grid-template-columns: 1fr; }
-      .section.span-2 { grid-column: auto; }
+      body { padding: 10px 8px 24px; }
+      .app-toolbar { margin-bottom: 8px; }
+      .selector-wrapper { align-items: stretch; flex-direction: column; gap: 7px; }
+      .container { min-height: 0; padding: 24px 18px 28px; }
+      header { align-items: flex-start; flex-direction: column; gap: 14px; }
+      h1 { font-size: clamp(30px, 10vw, 39px); }
+      .checklist-subtitle { font-size: 10.5px; }
+      .logo-wrapper { width: 135px; align-self: flex-end; }
       .footer-field { align-items: flex-start; flex-direction: column; }
       .footer-field .line { width: 100%; }
       .modal-header { align-items: flex-start; flex-direction: column; }
       .modal-actions { justify-content: flex-start; }
+      .modal-action, .modal-close { padding: 8px 10px; font-size: 12px; }
     }
-    @page { size: A4 portrait; margin: 10mm; }
+    @page { size: A4 portrait; margin: 16mm 16.2mm 14mm; }
     @media print {
       body { background: #fff; padding: 0; }
+      .app-toolbar { display: none; }
       .container { box-shadow: none; max-width: none; width: 100%; min-height: auto; padding: 0; }
-      .selector-wrapper { display: none; }
-      h1 { font-size: 54px; }
-      .logo-wrapper img { width: 190px; }
-      .section-title { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-      .info-box { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      header, .info-box, .section-title, .notice-box, .payer-tag, .stage-title, .stage-description { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .section-title, .stage-title, .stage-description { break-after: avoid-page; page-break-after: avoid; }
+      .section-title + .notice-box, .items-list .item:first-child { break-before: avoid-page; page-break-before: avoid; }
       .item { break-inside: avoid; }
       .item-row { cursor: default; }
       .modal-overlay { display: none !important; }
@@ -96,26 +127,32 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>CHECKLIST</h1>
-      <div class="logo-wrapper"><img src="imagens/logo.png" alt="Santa Casa Rondonópolis" /></div>
-    </header>
-
+  <div class="app-toolbar" aria-label="Seleção do checklist">
     <div class="selector-wrapper">
-      <label for="checklistType">Tipo de Prontuário:</label>
+      <label for="checklistType">Tipo de prontuário</label>
       <select id="checklistType">
         <option value="cirurgico">Prontuário Cirúrgico</option>
         <option value="clinico">Prontuário Clínico</option>
-        <option value="clinico-rn">Prontuário Clínico — RN</option>
+        <option value="clinico-rn">Prontuário Cirúrgico — RN</option>
         <option value="obstetrico">Prontuário Obstétrico</option>
         <option value="pa">Pronto Atendimento (PA)</option>
         <option value="ambulatorial-consulta">Ambulatorial — Consulta</option>
         <option value="ambulatorial-exames">Ambulatorial — Exames</option>
         <option value="ambulatorial-cirurgia">Ambulatorial — Cirurgia Ambulatorial</option>
         <option value="uti">Unidade Intensiva (UTI)</option>
+        <option value="oncologico">Tratamento Oncológico</option>
       </select>
     </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="header-copy">
+        <h1>CHECKLIST</h1>
+        <p id="checklistSubtitle" class="checklist-subtitle">Revisão de Prontuário — Prontuário Cirúrgico</p>
+      </div>
+      <div class="logo-wrapper"><img src="imagens/logo.png" alt="Santa Casa Rondonópolis" /></div>
+    </header>
 
     <div id="infoBox" class="info-box"></div>
     <div id="noticeBox"></div>
@@ -157,269 +194,11 @@
     </div>
   </div>
 
+  <script src="checklist-assets.js"></script>
+  <script src="checklist-data.js"></script>
   <script>
-    const orientationItems = [
-      "Todos os documentos deverão estar corretamente preenchidos (letra legível, assinados e carimbados).",
-      "Evoluções e prescrições devem ser diárias.",
-      "Datas e horários coerentes.",
-      "Sem lacunas (dias sem evolução)."
-    ];
-
-    const identificacaoPadrao = "Anamnese do paciente – Identificação completa: nome, telefone, data de nascimento, CPF, CNS (Cartão Nacional do SUS), endereço, bairro, CEP, nome da mãe, município, médico, convênio e registro do atendimento.";
-
-    const termosCompletos = [
-      "Contrato de prestação de serviços médicos e hospitalares assinado pelo paciente e/ou responsável.",
-      "Termo de esclarecimento, declaração e responsabilidade assinado pelo paciente e/ou responsável.",
-      "Cópia do documento do paciente com foto.",
-      "Se menor de idade, cópia do documento com foto do responsável.",
-      "Termo de consentimento para intervenção cirúrgica."
-    ];
-
-    const termosSemConsentimento = [
-      "Contrato de prestação de serviços médicos e hospitalares assinado pelo paciente e/ou responsável.",
-      "Termo de esclarecimento, declaração e responsabilidade assinado pelo paciente e/ou responsável.",
-      "Cópia do documento do paciente com foto.",
-      "Se menor de idade, cópia do documento com foto do responsável."
-    ];
-
-    const documentoPacienteResponsavel = [
-      "Cópia do documento do paciente com foto.",
-      "Se menor de idade, cópia do documento com foto do responsável."
-    ];
-
-    const checklists = {
-      cirurgico: {
-        title: "Prontuário Cirúrgico",
-        orientation: orientationItems,
-        sections: [
-          { title: "Identificação e Abertura", items: [identificacaoPadrao] },
-          { title: "Registros Assistenciais – Médico", items: [
-            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
-            "Guia de Autorização SISREG.",
-            "Anamnese do paciente.",
-            "Sumário / Resumo de alta hospitalar.",
-            "Evoluções médicas compatíveis com o tempo de permanência.",
-            "Prescrição médica.",
-            "Descrição cirúrgica.",
-            "Relatório de anestesia.",
-            "Formulário de avaliação pré-anestésica.",
-            "Relatório de produtos por atendimento / Aviso de cirurgia (folha de gastos).",
-            "Ficha de acompanhamento do paciente na SRPA."
-          ] },
-          { title: "Procedimentos e Registros Complementares", items: [
-            "Enfermagem perioperatória.",
-            "Cirurgia segura.",
-            "Integrador químico.",
-            "Registro de utilização de OPME (se houver).",
-            "Verificação de cirurgia segura – checklist pré-operatório.",
-            "Solicitação de exame anatomopatológico (se houver).",
-            "Imprimir exames laboratoriais e laudo de exames de imagem.",
-            "Evolução de enfermagem – registro diário."
-          ] },
-          { title: "Termos e Documentação", items: termosCompletos }
-        ]
-      },
-      clinico: {
-        title: "Prontuário Clínico",
-        orientation: orientationItems,
-        sections: [
-          { title: "Identificação e Abertura", items: [identificacaoPadrao] },
-          { title: "Registros Assistenciais", items: [
-            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
-            "Guia de Autorização SISREG.",
-            "Anamnese do paciente.",
-            "Sumário / Resumo de alta hospitalar.",
-            "Evoluções médicas subsequentes compatíveis com o tempo de permanência.",
-            "Prescrição médica.",
-            "Evolução de enfermagem – registro diário.",
-            "Imprimir exames laboratoriais e laudo de exames de imagem.",
-            "Evolução da fisioterapia."
-          ] },
-          { title: "Termos e Documentação", span: true, items: termosCompletos }
-        ]
-      },
-      "clinico-rn": {
-        title: "Prontuário Clínico – RN",
-        orientation: orientationItems,
-        sections: [
-          { title: "Identificação e Abertura", items: [identificacaoPadrao] },
-          { title: "Registros Assistenciais", items: [
-            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
-            "Guia de Autorização SISREG.",
-            "Anamnese do paciente.",
-            "Sumário / Resumo de alta hospitalar."
-          ] },
-          { title: "Registros do Recém-Nascido", items: [
-            "Identificação do RN (ficha amarela).",
-            "Evolução de enfermagem com registro do pezinho.",
-            "Ficha de recepção do RN.",
-            "Caso o RN venha transferido da UTI: ficha de admissão da UTI.",
-            "Evoluções médicas subsequentes compatíveis com o tempo de permanência.",
-            "Prescrição médica.",
-            "Evolução de enfermagem – registro diário.",
-            "Imprimir exames laboratoriais e laudo de exames de imagem.",
-            "Evolução da fisioterapia."
-          ] },
-          { title: "Termos e Documentação", items: termosSemConsentimento }
-        ]
-      },
-      obstetrico: {
-        title: "Prontuário Obstétrico",
-        orientation: orientationItems,
-        notice: "⚠ Caso o bebê fique internado: tirar cópia de identificação do RN (folha amarela), evolução de enfermagem com registro do pezinho, ficha de recepção do RN e 1ª evolução médica — permanecendo na conta da mãe.",
-        sections: [
-          { title: "Identificação e Abertura", items: [identificacaoPadrao] },
-          { title: "Registros Assistenciais – Médico e Parto", items: [
-            "Ficha de acolhimento e classificação de risco.",
-            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
-            "Guia de Autorização SISREG.",
-            "Anamnese do paciente.",
-            "Sumário / Resumo de alta hospitalar.",
-            "Evoluções médicas compatíveis com o tempo de permanência.",
-            "Prescrição médica.",
-            "Partograma e/ou Descrição Cirúrgica.",
-            "Relatório de anestesia.",
-            "Formulário de avaliação pré-anestésica.",
-            "Relatório de produtos por atendimento / Aviso de cirurgia (folha de gastos).",
-            "Ficha de acompanhamento do paciente na SRPA.",
-            "Enfermagem perioperatória.",
-            "Cirurgia segura e Integrador químico.",
-            "Imprimir exames laboratoriais e laudo de exames de imagem.",
-            "Laqueadura / vasectomia, se houver (planejamento familiar).",
-            "Cardiotocografia fetal (se houver).",
-            "Evolução de enfermagem – registro diário."
-          ] },
-          { title: "Recém-Nascido (RN)", items: [
-            "Identificação do RN (pezinho + folhinha amarela).",
-            "Ficha de recepção do RN.",
-            "Evolução de enfermagem com o registro do pezinho.",
-            "Evolução médica do RN.",
-            "Prescrição do recém-nascido.",
-            "Exames do recém-nascido.",
-            "Evolução de enfermagem do RN – registro diário.",
-            "Declaração de nascido vivo.",
-            "Certidão de nascimento."
-          ] },
-          { title: "Termos e Documentação", items: [
-            "Ficha de acolhimento e classificação de risco.",
-            "Contrato de prestação de serviços médicos e hospitalares assinado pelo paciente e/ou responsável.",
-            "Termo de esclarecimento, declaração e responsabilidade assinado pelo paciente e/ou responsável.",
-            "Termo de consentimento para intervenção cirúrgica.",
-            "Cópia do documento do paciente com foto.",
-            "Se menor de idade, cópia do documento com foto do responsável."
-          ] }
-        ]
-      },
-      pa: {
-        title: "Pronto Atendimento (PA)",
-        orientation: orientationItems,
-        sections: [
-          { title: "Identificação e Abertura", items: [identificacaoPadrao] },
-          { title: "Registros Assistenciais", items: [
-            "Ficha de acolhimento e classificação de risco.",
-            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
-            "Guia de Autorização SISREG.",
-            "Anamnese do paciente.",
-            "Evoluções médicas compatíveis com o tempo de permanência.",
-            "Prescrição médica.",
-            "Prescrição de alta médica.",
-            "Descrição cirúrgica (se houver pequenos procedimentos).",
-            "Evolução de enfermagem.",
-            "Imprimir exames laboratoriais e laudo de exames de imagem."
-          ] },
-          { title: "Termos e Documentação", span: true, items: [
-            "Ficha de acolhimento e classificação de risco.",
-            "Contrato de prestação de serviços médicos e hospitalares assinado pelo paciente e/ou responsável.",
-            "Termo de esclarecimento, declaração e responsabilidade assinado pelo paciente e/ou responsável.",
-            "Cópia do documento do paciente com foto.",
-            "Se menor de idade, cópia do documento com foto do responsável."
-          ] }
-        ]
-      },
-      "ambulatorial-consulta": {
-        title: "Ambulatorial – Consulta",
-        orientation: orientationItems,
-        sections: [
-          { title: "Identificação e Abertura", items: [identificacaoPadrao] },
-          { title: "Registros Assistenciais", items: [
-            "Guia de Autorização SISREG.",
-            "Anamnese do paciente."
-          ] },
-          { title: "Termos e Documentação", span: true, items: documentoPacienteResponsavel }
-        ]
-      },
-      "ambulatorial-exames": {
-        title: "Ambulatorial – Exames",
-        orientation: orientationItems,
-        sections: [
-          { title: "Identificação e Abertura", items: [identificacaoPadrao] },
-          { title: "Registros Assistenciais", items: [
-            "Laudo para Solicitação de Autorização de Internação Hospitalar (AIH) e/ou Guia de Autorização da Operadora.",
-            "Guia de Autorização SISREG.",
-            "Solicitação médica de exames devidamente registrada e autorizada.",
-            "Autorização / Guia do exame (se aplicável).",
-            "Ficha de recepção do laboratório.",
-            { text: "Imprimir resultados dos exames laboratoriais anexados ao prontuário.", bold: true },
-            "Exames de tomografia computadorizada – necessitam de APAC autorizada."
-          ] },
-          { title: "Termos e Documentação", span: true, items: documentoPacienteResponsavel }
-        ]
-      },
-      "ambulatorial-cirurgia": {
-        title: "Ambulatorial – Cirurgia Ambulatorial",
-        orientation: orientationItems,
-        sections: [
-          { title: "Identificação e Abertura", items: [identificacaoPadrao] },
-          { title: "Registros Assistenciais", items: [
-            "Autorização de procedimentos ambulatoriais (SISREG)",
-            "Anamnese do paciente.",
-            "Sumário / Resumo de alta hospitalar.",
-            "Evolução médica.",
-            "Descrição cirúrgica.",
-            "Enfermagem perioperatória.",
-            "Cirurgia segura.",
-            "Registro de utilização de OPME (se houver).",
-            "Evolução de enfermagem – registro diário."
-          ] },
-          { title: "Termos e Documentação", span: true, items: termosCompletos }
-        ]
-      },
-      uti: {
-        title: "Unidade Intensiva (UTI)",
-        orientationText: "Todos os documentos deverão estar corretamente preenchidos (letra legível, assinados e carimbados). Evoluções e prescrições devem ser diárias, com datas e horários coerentes, sem lacunas.",
-        sections: [
-          { title: "Identificação e Abertura", items: [identificacaoPadrao] },
-          { title: "Registros Assistenciais – Médico", items: [
-            "Guia de autorização da cirurgia (SUS – SISREG e/ou operadoras).",
-            "Anamnese do paciente.",
-            "Sumário / Resumo de alta hospitalar.",
-            "Evolução médica do intensivista – compatível com o tempo de permanência.",
-            "Evolução médica diarista – turno diurno e noturno.",
-            "Prescrição médica.",
-            "Prescrição de hemodiálise (se houver)."
-          ] },
-          { title: "Procedimentos e Dispositivos", items: [
-            "Descrição cirúrgica, se houver procedimentos (cateteres, PICC, traqueostomia, drenagem de tórax, hemodiálise).",
-            "Relatório de anestesia (se houver).",
-            "Formulário de avaliação pré-anestésica.",
-            "Relatório de produtos por atendimento / Aviso de cirurgia (folha de gastos).",
-            "Ficha de acompanhamento na SRPA.",
-            "Enfermagem perioperatória.",
-            "Cirurgia segura e Integrador químico.",
-            "Registro de utilização de OPME (se houver).",
-            "Verificação de cirurgia segura – checklist pré-operatório.",
-            "Solicitação de exame anatomopatológico (se houver)."
-          ] },
-          { title: "Registros Complementares", items: [
-            "Evolução diária do serviço de fisioterapia.",
-            "Evolução de enfermagem – registro diário.",
-            "Eletrocardiograma.",
-            "Imprimir exames laboratoriais e laudo de exames de imagem."
-          ] },
-          { title: "Termos e Documentação", span: true, items: termosCompletos }
-        ]
-      }
-    };
+    const guidanceItems = window.CHECKLIST_GUIDANCE || [];
+    const checklists = window.CHECKLIST_DATA || {};
 
     function escapeHtml(value) {
       return String(value)
@@ -452,52 +231,40 @@
     }
 
 
-    const CIMG = "imagens/checklist/";
+    const imageGroups = window.CHECKLIST_IMAGE_GROUPS || {};
 
-    const itemImageRules = [
-      { title: "Cirurgia segura e Integrador químico", match: "all", keys: ["cirurgia segura", "integrador quimico"], images: [CIMG + "cirurgia_segura.png", CIMG + "integrador_quimico.png"] },
-      { title: "Identificação do RN / Pezinho", match: "all", keys: ["identificacao do rn", "pezinho"], images: [CIMG + "folha_amarela_rn.png", CIMG + "evolucao_enferm_rg_pezinho.png"] },
-      { title: "Relatório de produtos / Aviso de cirurgia", match: "any", keys: ["relatorio de produtos por atendimento", "aviso de cirurgia", "folha de gastos"], images: [CIMG + "relatorio_anesteisa_aviso_cirurgia.png", CIMG + "folha_de_gasto.png"] },
-      { title: "Relatório de anestesia", match: "any", keys: ["relatorio de anestesia", "anestesia"], images: [CIMG + "relatorio_anesteisa_0001.png", CIMG + "relatorio_anesteisa_0002.png"] },
-      { title: "Contrato de prestação de serviços", match: "any", keys: ["contrato de prestacao"], images: [CIMG + "contrato_prestacao_servico_0001.png", CIMG + "contrato_prestacao_servico_0002.png"] },
-      { title: "Termo de esclarecimento e responsabilidade", match: "any", keys: ["termo de esclarecimento", "declaracao e responsabilidade"], images: [CIMG + "termo_de_esclarecimento_0001.png", CIMG + "termo_de_esclarecimento_0002.png"] },
-      { title: "Ficha de recepção do RN", match: "any", keys: ["ficha de recepcao do rn"], images: [CIMG + "ficha_de_recpcao_rn_0001.png", CIMG + "ficha_de_recpcao_rn_0002.png"] },
-      { title: "Ficha de admissão da UTI neonatal", match: "any", keys: ["ficha de admissao da uti"], images: [CIMG + "ficha_admissao_uti_neo_0001.png", CIMG + "ficha_admissao_uti_neo_0002.png"] },
-      { title: "Ficha de acompanhamento na SRPA", match: "any", keys: ["srpa"], images: [CIMG + "srpa_0001.png", CIMG + "srpa_0002.png"] },
-      { title: "Enfermagem perioperatória", match: "any", keys: ["enfermagem perioperatoria"], images: [CIMG + "enfermagem_perioperatoria_0001.png", CIMG + "enfermagem_perioperatoria_0002.png"] },
-      { title: "Sumário / Resumo de alta hospitalar", match: "any", keys: ["sumario", "resumo de alta"], images: [CIMG + "sumario_resumo_alta.png", CIMG + "relatorio_de_alta.png"] },
-      { title: "Anamnese do paciente", match: "any", keys: ["anamnese"], images: [CIMG + "anamnese_do_paciente.png", CIMG + "anamnese.png"] },
-      { title: "Laudo de Solicitação de AIH", match: "any", keys: ["aih", "internacao hospitalar", "operadora"], images: [CIMG + "laudo_solicitacao_aih.jpg"] },
-      { title: "Guia / Autorização SISREG", match: "any", keys: ["sisreg"], images: [CIMG + "sisreg.webp"] },
-      { title: "Prescrição do recém-nascido", match: "any", keys: ["prescricao do recem nascido", "prescricao do recem-nascido", "prescricao do rn"], images: [CIMG + "prescricao_do_rn.png"] },
-      { title: "Prescrição médica", match: "any", keys: ["prescricao medica", "prescricao de alta", "prescricao de hemodialise"], images: [CIMG + "prescricao_medica.png"] },
-      { title: "Descrição cirúrgica", match: "any", keys: ["descricao cirurgica", "partograma", "cateteres", "picc", "traqueostomia", "drenagem de torax"], images: [CIMG + "descricao_cirurgica.png"] },
-      { title: "Formulário de avaliação pré-anestésica", match: "any", keys: ["pre anestesica"], images: [CIMG + "formulario_de_avaliacao_pre_anestesica.png"] },
-      { title: "Verificação de cirurgia segura", match: "any", keys: ["verificacao de cirurgia segura", "checklist pre operatorio"], images: [CIMG + "cirurgia_segura_checklist_pre_operatorio.png"] },
-      { title: "Cirurgia segura", match: "any", keys: ["cirurgia segura"], images: [CIMG + "cirurgia_segura.png"] },
-      { title: "Integrador químico", match: "any", keys: ["integrador quimico"], images: [CIMG + "integrador_quimico.png"] },
-      { title: "Evolução de enfermagem com registro do pezinho", match: "any", keys: ["registro do pezinho", "pezinho"], images: [CIMG + "evolucao_enferm_rg_pezinho.png"] },
-      { title: "Identificação do RN", match: "any", keys: ["identificacao do rn", "ficha amarela", "folhinha amarela"], images: [CIMG + "folha_amarela_rn.png"] },
-      { title: "Evolução médica do RN", match: "any", keys: ["evolucao medica do rn"], images: [CIMG + "evolucao_medica.png"] },
-      { title: "Evolução médica", match: "any", keys: ["evolucao medica", "evolucoes medicas", "intensivista", "diarista", "permanencia"], images: [CIMG + "evolucao_medica.png"] },
-      { title: "Evolução de enfermagem", match: "any", keys: ["evolucao de enfermagem", "registro diario"], images: [CIMG + "evolucao_enfermagem_registro_diario.png"] },
-      { title: "Evolução da fisioterapia", match: "any", keys: ["fisioterapia"], images: [CIMG + "evolucao_da_fisioterapia.png"] },
-      { title: "Declaração de nascido vivo", match: "any", keys: ["declaracao de nascido vivo"], images: [CIMG + "declaracao_de_nascido_vivo.jpg"] },
-      { title: "Certidão de nascimento", match: "any", keys: ["certidao de nascimento"], images: [CIMG + "certidao_de_nascimento.jpg"] },
-      { title: "Documento com foto", match: "any", keys: ["documento do paciente", "documento com foto", "documento do responsavel"], images: [CIMG + "documento_com_foto.png"] }
-    ];
-
-    function ruleMatches(rule, normalizedText) {
-      const keys = rule.keys.map((key) => normalizeText(key));
-      if (rule.match === "all") return keys.every((key) => normalizedText.includes(key));
-      return keys.some((key) => normalizedText.includes(key));
+    function getItemImages(type, item) {
+      const typeGroups = imageGroups[type] || {};
+      const sources = (item && item.imageGroups ? item.imageGroups : []).flatMap((group) => typeGroups[group] || []);
+      return Array.from(new Set(sources));
     }
 
-    function getReferenceData(itemText) {
-      const normalized = normalizeText(itemText);
-      const rule = itemImageRules.find((entry) => ruleMatches(entry, normalized));
-      if (!rule) return { title: "Documento do checklist", images: [] };
-      return { title: rule.title, images: rule.images };
+    function findChecklistItem(type, itemId) {
+      const checklist = checklists[type];
+      if (!checklist) return null;
+      for (const section of checklist.sections || []) {
+        const item = (section.items || []).find((entry) => entry.id === itemId);
+        if (item) return item;
+      }
+      return null;
+    }
+
+    function getReferenceData(type, item) {
+      if (!item) return { title: "Documento do checklist", images: [] };
+      return {
+        title: item.imageTitle || item.text || "Documento do checklist",
+        images: getItemImages(type, item)
+      };
+    }
+
+    const EDIT_IMAGE_PASSWORD = "1234";
+
+    function requestImageEditPassword(actionLabel) {
+      const password = window.prompt(`Digite a senha para ${actionLabel}:`);
+      if (password === null) return false;
+      if (password === EDIT_IMAGE_PASSWORD) return true;
+      alert("Senha inválida. A alteração não foi realizada.");
+      return false;
     }
 
     const CUSTOM_IMAGE_DB_NAME = "checklist-prontuario-imagens";
@@ -507,6 +274,7 @@
 
     let currentModalState = null;
     let pendingImageAction = null;
+    let modalRequestId = 0;
 
     function defaultCustomImageRecord() {
       return { additions: [], replacements: {} };
@@ -641,6 +409,10 @@
 
     function chooseImageFile(action) {
       if (!currentModalState) return;
+
+      const actionLabel = action === "add" ? "adicionar imagem" : "substituir a imagem atual";
+      if (!requestImageEditPassword(actionLabel)) return;
+
       pendingImageAction = action;
       const input = document.getElementById("imageFileInput");
       if (!input) return;
@@ -688,6 +460,7 @@
 
     async function removeCurrentCustomImage() {
       if (!currentModalState) return;
+      if (!requestImageEditPassword("remover a imagem personalizada")) return;
       const currentIndex = getCurrentImageIndex();
       if (currentIndex === null) {
         alert("Não há imagem personalizada selecionada para remover.");
@@ -885,6 +658,13 @@
     }
 
 
+    function loadFrameImage(frame) {
+      if (!frame) return;
+      const img = frame.querySelector("img[data-src]");
+      if (!img || img.getAttribute("src")) return;
+      img.src = img.dataset.src;
+    }
+
     function renderModalImages(images, itemText) {
       const modalImages = document.getElementById("modalImages");
       const modalFallback = document.getElementById("modalFallback");
@@ -921,7 +701,7 @@
         frame.dataset.imageKind = entry.kind || "base";
 
         const img = document.createElement("img");
-        img.src = entry.src;
+        img.dataset.src = entry.src;
         img.alt = `${itemText} - imagem ${index + 1}`;
         img.loading = "lazy";
         img.onerror = function () {
@@ -938,12 +718,27 @@
         frame.appendChild(error);
         enableImageZoom(frame);
         carousel.appendChild(frame);
+        if (index === 0) loadFrameImage(frame);
       });
 
       carousel.addEventListener("scroll", function () {
-        window.requestAnimationFrame(function () { updateZoomValue(); });
+        window.requestAnimationFrame(function () {
+          const currentFrame = getCurrentFrame();
+          loadFrameImage(currentFrame);
+          updateZoomValue(currentFrame);
+        });
       });
       modalImages.appendChild(carousel);
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            loadFrameImage(entry.target);
+            observer.unobserve(entry.target);
+          });
+        }, { root: carousel, threshold: 0.1 });
+        carousel.querySelectorAll(".image-frame").forEach((frame) => observer.observe(frame));
+      }
       updateZoomValue();
       if (toolbar && imageEntries.length > 1) toolbar.classList.add("show");
     }
@@ -952,67 +747,125 @@
       const carousel = document.getElementById("imageCarousel");
       if (!carousel) return;
       resetAllZoom();
-      const amount = carousel.clientWidth * direction;
-      carousel.scrollBy({ left: amount, behavior: "smooth" });
+      const frames = Array.from(carousel.querySelectorAll(".image-frame"));
+      const current = getCurrentFrame();
+      const currentIndex = Math.max(0, frames.indexOf(current));
+      const targetIndex = clamp(currentIndex + direction, 0, Math.max(0, frames.length - 1));
+      const target = frames[targetIndex];
+      if (!target) return;
+      loadFrameImage(target);
+      carousel.scrollTo({ left: target.offsetLeft, behavior: "smooth" });
     }
 
-    function renderInfo(checklist) {
-      if (checklist.orientationText) {
-        return `<div class="type">▯ ${escapeHtml(checklist.title)} — ⚠ ${escapeHtml(checklist.orientationText)}</div>`;
+    function renderInfo() {
+      const items = guidanceItems.map((item) => `<li class="guidance-item">${escapeHtml(item)}</li>`).join("");
+      return `<ul class="guidance-list">${items}</ul>`;
+    }
+
+    function renderTags(tags) {
+      if (!Array.isArray(tags) || !tags.length) return "";
+      const content = tags.map((tag) => `<span class="payer-tag">${escapeHtml(tag)}</span>`).join("");
+      return `<span class="item-tags">${content}</span>`;
+    }
+
+    function renderItems(type, items) {
+      return (items || []).map((item) => {
+        const text = getItemText(item);
+        const note = item.note ? `<span class="item-note">${escapeHtml(item.note)}</span>` : "";
+        return `
+          <li class="item">
+            <button class="item-row" type="button" data-checklist-type="${escapeHtml(type)}" data-item-id="${escapeHtml(item.id)}" aria-label="Abrir referência do item: ${escapeHtml(text)}">
+              <span class="item-circle" aria-hidden="true"></span>
+              <span class="item-copy">
+                <span class="item-main">${itemHtml(item)}</span>${renderTags(item.tags)}
+                ${note}
+              </span>
+            </button>
+          </li>
+        `;
+      }).join("");
+    }
+
+    function renderSection(type, section) {
+      const items = renderItems(type, section.items);
+      if (section.variant === "stage") {
+        const description = section.description ? `<div class="stage-description">${escapeHtml(section.description)}</div>` : "";
+        return `
+          <section class="stage">
+            <div class="stage-title"><span class="stage-check" aria-hidden="true"></span>${escapeHtml(section.title)}</div>
+            ${description}
+            <ul class="items-list">${items}</ul>
+          </section>
+        `;
       }
-      const items = checklist.orientation.map((item) => `<li>⚠ ${escapeHtml(item)}</li>`).join("");
-      return `<div class="type">▯ ${escapeHtml(checklist.title)}</div><ul>${items}</ul>`;
+
+      const notice = section.notice ? `<div class="notice-box"><strong>Atenção — </strong>${escapeHtml(section.notice)}</div>` : "";
+      const number = section.number === undefined ? "" : `<span class="section-number">${escapeHtml(section.number)}</span>`;
+      return `
+        <section class="section">
+          <div class="section-title">${number}<span>${escapeHtml(section.title)}</span></div>
+          ${notice}
+          <ul class="items-list">${items}</ul>
+        </section>
+      `;
     }
 
     function renderChecklist(type) {
       const checklist = checklists[type];
       if (!checklist) return;
 
-      document.getElementById("infoBox").innerHTML = renderInfo(checklist);
-      document.getElementById("noticeBox").innerHTML = checklist.notice ? `<div class="notice-box">${escapeHtml(checklist.notice)}</div>` : "";
-
-      document.getElementById("checklistContent").innerHTML = checklist.sections.map((section) => {
-        const items = section.items.map((item) => {
-          const text = getItemText(item);
-          return `
-            <li class="item">
-              <button class="item-row" type="button" data-item-text="${escapeHtml(text)}" aria-label="Abrir imagem referente a: ${escapeHtml(text)}">
-                <span class="item-circle" aria-hidden="true"></span>
-                <span class="item-text">${itemHtml(item)}</span>
-              </button>
-            </li>
-          `;
-        }).join("");
-        return `
-          <section class="section${section.span ? " span-2" : ""}">
-            <div class="section-title">${escapeHtml(section.title)}</div>
-            <ul class="items-list">${items}</ul>
-          </section>
-        `;
-      }).join("");
+      document.getElementById("checklistSubtitle").textContent = `Revisão de Prontuário — ${checklist.title}`;
+      document.getElementById("infoBox").innerHTML = renderInfo();
+      document.getElementById("noticeBox").innerHTML = checklist.introNotice
+        ? `<div class="notice-box checklist-intro-notice"><strong>Atenção — </strong>${escapeHtml(checklist.introNotice)}</div>`
+        : "";
+      document.getElementById("checklistContent").innerHTML = checklist.sections.map((section) => renderSection(type, section)).join("");
+      document.title = `Checklist de Prontuário — ${checklist.title}`;
     }
 
+    function customRecordHasImages(record) {
+      const normalized = normalizeCustomImageRecord(record);
+      return normalized.additions.length > 0 || Object.keys(normalized.replacements).length > 0;
+    }
 
-    async function openModal(itemText, triggerElement) {
+    async function getItemCustomRecord(itemKey, legacyKey) {
+      const scopedRecord = await getCustomImageRecord(itemKey);
+      if (customRecordHasImages(scopedRecord) || !legacyKey || legacyKey === itemKey) return scopedRecord;
+      const legacyRecord = await getCustomImageRecord(legacyKey);
+      return customRecordHasImages(legacyRecord) ? legacyRecord : scopedRecord;
+    }
+
+    async function openModal(type, itemId, triggerElement) {
+      const requestId = ++modalRequestId;
       const overlay = document.getElementById("imageModal");
       const modalTitle = document.getElementById("modalTitle");
       const modalCaption = document.getElementById("modalCaption");
       if (!overlay) return;
 
+      const item = findChecklistItem(type, itemId);
+      if (!item) return;
+      const itemText = getItemText(item);
+
       document.querySelectorAll(".item.active").forEach((item) => item.classList.remove("active"));
       const itemElement = triggerElement ? triggerElement.closest(".item") : null;
       if (itemElement) itemElement.classList.add("active");
 
-      const referenceData = getReferenceData(itemText);
-      const itemKey = normalizeText(itemText);
-      const customRecord = await getCustomImageRecord(itemKey);
+      const referenceData = getReferenceData(type, item);
+      const itemKey = `${type}:${item.id}`;
+      const legacyKey = normalizeText(itemText);
+      const customRecord = await getItemCustomRecord(itemKey, legacyKey);
+      if (requestId !== modalRequestId) return;
 
       currentModalState = {
+        type,
+        itemId: item.id,
         itemText,
         itemKey,
+        legacyKey,
         baseImages: referenceData.images || [],
         customRecord,
-        title: referenceData.title
+        title: referenceData.title,
+        triggerElement
       };
 
       modalTitle.textContent = referenceData.title;
@@ -1030,6 +883,8 @@
       const overlay = document.getElementById("imageModal");
       const modalImages = document.getElementById("modalImages");
       if (!overlay) return;
+      modalRequestId++;
+      const triggerElement = currentModalState && currentModalState.triggerElement;
       resetAllZoom();
       overlay.classList.remove("show");
       overlay.setAttribute("aria-hidden", "true");
@@ -1038,12 +893,15 @@
       currentModalState = null;
       pendingImageAction = null;
       updateZoomValue();
+      if (triggerElement && typeof triggerElement.focus === "function") {
+        triggerElement.focus({ preventScroll: true });
+      }
     }
 
     document.getElementById("checklistContent").addEventListener("click", function (event) {
       const row = event.target.closest(".item-row");
       if (!row) return;
-      openModal(row.dataset.itemText || row.textContent.trim(), row);
+      openModal(row.dataset.checklistType, row.dataset.itemId, row);
     });
 
     document.getElementById("imageModal").addEventListener("click", function (event) {
