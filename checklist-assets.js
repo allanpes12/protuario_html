@@ -568,6 +568,64 @@
         "imagens/checklist/UTI/26-Exames laboratoriais/2.png",
         "imagens/checklist/UTI/26-Exames laboratoriais/3.png"
       ]
+    },
+
+    oncologico: {
+      abertura: [
+        "imagens/checklist/Oncologia/0.1-Identificação e Abertura.png",
+        "imagens/checklist/Oncologia/1.1-CNS.jpg"
+      ],
+      "documento-paciente": [
+        "imagens/checklist/Oncologia/2.1-Documento com foto.PNG"
+      ],
+      "admissao-tratamento": [
+        "imagens/checklist/Oncologia/Admissão de tratamento Oncologico/0001.png",
+        "imagens/checklist/Oncologia/Admissão de tratamento Oncologico/0002.png",
+        "imagens/checklist/Oncologia/Admissão de tratamento Oncologico/0003.png",
+        "imagens/checklist/Oncologia/Admissão de tratamento Oncologico/0004.png",
+        "imagens/checklist/Oncologia/Admissão de tratamento Oncologico/0005.png",
+        "imagens/checklist/Oncologia/Admissão de tratamento Oncologico/0006.png"
+      ],
+      anatomopatologico: [
+        "imagens/checklist/Oncologia/Laudo de Exame Anatomo Patologico/0001.png",
+        "imagens/checklist/Oncologia/Laudo de Exame Anatomo Patologico/0002.png"
+      ],
+      "imuno-histoquimico": [
+        "imagens/checklist/Oncologia/Relatorio Imunoistoquimico.png"
+      ],
+      "exames-imagem": [
+        "imagens/checklist/Oncologia/Exames de Imagem RX US TC/0001.png",
+        "imagens/checklist/Oncologia/Exames de Imagem RX US TC/0002.png",
+        "imagens/checklist/Oncologia/Exames de Imagem RX US TC/0003.png",
+        "imagens/checklist/Oncologia/Exames de Imagem RX US TC/0004.png"
+      ],
+      "evolucao-medica": [
+        "imagens/checklist/Oncologia/evolução medica/0001.png",
+        "imagens/checklist/Oncologia/evolução medica/0002.png",
+        "imagens/checklist/Oncologia/evolução medica/0003.png"
+      ],
+      "prescricao-medica": [
+        "imagens/checklist/Oncologia/Prescrição medica.png",
+        "imagens/checklist/Oncologia/Prescriçaõ  medica.png"
+      ],
+      "controle-frequencia": [
+        "imagens/checklist/Oncologia/Controle de Frequencia Individual.png"
+      ],
+      "retirada-medicamento": [
+        "imagens/checklist/Oncologia/Declaração de Retirada.png"
+      ],
+      "evolucao-enfermeiro": [
+        "imagens/checklist/Oncologia/Evolução de Enfermagem.png"
+      ],
+      "anotacao-enfermagem": [
+        "imagens/checklist/Oncologia/Anotação de Enfermagem.png"
+      ],
+      "evolucao-farmacia": [
+        "imagens/checklist/Oncologia/Evolução da farmacia.png"
+      ],
+      "baixa-medicamento": [
+        "imagens/checklist/Oncologia/Formulario baixa de medicamento.png"
+      ]
     }
   };
 })();

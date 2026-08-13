@@ -304,30 +304,30 @@
     oncologico: {
       title: "Tratamento Oncológico",
       sections: [
-        section(1, "Abertura do Cadastro", [item("abertura", identification)]),
+        section(1, "Abertura do Cadastro", [item("abertura", identification, "abertura")]),
         section(2, "Termos, declarações e documentos", [
-          item("documento-paciente", "Cópia do documento do paciente com foto, contendo número do CPF (se houver).")
+          item("documento-paciente", "Cópia do documento do paciente com foto, contendo número do CPF (se houver).", "documento-paciente")
         ], { notice: documentNotice }),
         section(3, "Registros assistenciais — Início de Tratamento", [
-          item("admissao-tratamento", "Admissão de tratamento oncológico."),
-          item("anatomopatologico", "Laudo de exame anatomopatológico."),
-          item("imuno-histoquimico", "Relatório imuno-histoquímico (se houver)."),
-          item("exames-imagem", "Ressonância magnética, tomografia computadorizada ou ultrassonografia (se houver).")
+          item("admissao-tratamento", "Admissão de tratamento oncológico.", "admissao-tratamento"),
+          item("anatomopatologico", "Laudo de exame anatomopatológico.", "anatomopatologico"),
+          item("imuno-histoquimico", "Relatório imuno-histoquímico (se houver).", "imuno-histoquimico"),
+          item("exames-imagem", "Ressonância magnética, tomografia computadorizada ou ultrassonografia (se houver).", "exames-imagem")
         ]),
         stage("Tratamento Ativo", "Período em que o paciente permanece em acompanhamento e recebendo terapia oncológica, conforme o plano terapêutico estabelecido pela equipe médica, podendo ocorrer semanalmente, a cada 15 dias, 30 dias ou 90 dias. Nos casos de tratamento semanal, o controle de frequência deverá ser entregue ao final de cada mês.", [
-          item("evolucao-medica", "Evolução médica (se houver)."),
-          item("prescricao-medica", "Prescrições médicas em ordem cronológica."),
-          item("controle-frequencia", "Controle de frequência individual de quimioterapia."),
-          item("retirada-medicamento", "Declaração de retirada de medicamento."),
-          item("evolucao-enfermeiro", "Evolução do enfermeiro."),
-          item("anotacao-enfermagem", "Anotação de enfermagem."),
-          item("evolucao-farmacia", "Evolução da farmácia (se houver)."),
+          item("evolucao-medica", "Evolução médica (se houver).", "evolucao-medica"),
+          item("prescricao-medica", "Prescrições médicas em ordem cronológica.", "prescricao-medica"),
+          item("controle-frequencia", "Controle de frequência individual de quimioterapia.", "controle-frequencia"),
+          item("retirada-medicamento", "Declaração de retirada de medicamento.", "retirada-medicamento"),
+          item("evolucao-enfermeiro", "Evolução do enfermeiro.", "evolucao-enfermeiro"),
+          item("anotacao-enfermagem", "Anotação de enfermagem.", "anotacao-enfermagem"),
+          item("evolucao-farmacia", "Evolução da farmácia (se houver).", "evolucao-farmacia"),
           item("exames-laboratoriais", "Imprimir exames laboratoriais."),
-          item("baixa-medicamento", "Formulário de baixa de medicamento.")
+          item("baixa-medicamento", "Formulário de baixa de medicamento.", "baixa-medicamento")
         ]),
         stage("Seguimento (acompanhamento)", "Paciente que permanece em acompanhamento pela equipe de Oncologia para monitoramento da evolução clínica.", [
           item("consulta-medica", "Consulta médica."),
-          item("exames-seguimento", "Imprimir exames laboratoriais e de imagem (se houver).")
+          item("exames-seguimento", "Imprimir exames laboratoriais e de imagem (se houver).", "exames-imagem")
         ])
       ]
     }
