@@ -769,8 +769,9 @@
   ];
 
   const updatedSafeSurgery = [
-    "imagens/checklist/Formularios prontuario/Cirurgia segura atualizada/verificacao-cirurgia-segura-pre-operatorio.jpg",
-    "imagens/checklist/Formularios prontuario/Cirurgia segura atualizada/cirurgia-segura.png"
+    "imagens/checklist/Formularios prontuario/Cirurgia segura atualizada/cirurgia-segura.png",
+    "imagens/checklist/Formularios prontuario/Cirurgia segura atualizada/verificacao-cirurgia-segura-pre-operatorio.jpg"
+    
   ];
   ["cirurgico", "obstetrico", "ambulatorial-cirurgia"].forEach((type) => {
     groups[type]["cirurgia-segura"] = updatedSafeSurgery;
