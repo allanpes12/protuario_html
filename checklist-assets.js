@@ -783,4 +783,20 @@
   ["cirurgico", "obstetrico", "ambulatorial-cirurgia", "uti"].forEach((type) => {
     groups[type]["consentimento-cirurgico"] = updatedSurgicalConsent;
   });
+
+  const updatedAdmissionGuide = [
+    "imagens/checklist/Formularios prontuario/Guia de solicitacao de internacao atualizada/pagina-01.png",
+    "imagens/checklist/Formularios prontuario/Guia de solicitacao de internacao atualizada/pagina-02.png"
+  ];
+  [
+    "cirurgico",
+    "clinico",
+    "clinico-rn",
+    "obstetrico",
+    "pa",
+    "ambulatorial-exames",
+    "uti"
+  ].forEach((type) => {
+    groups[type]["guia-operadora"] = updatedAdmissionGuide;
+  });
 })();

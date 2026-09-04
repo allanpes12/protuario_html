@@ -42,7 +42,7 @@
           item("obito", "Declaração de óbito (se houver).", "obito")
         ], { notice: documentNotice }),
         section(3, "Registros de autorização", [
-          item("guia-operadora", "Guia de autorização da operadora.", "guia-operadora", { tags: insuranceTags })
+          item("guia-operadora", "Guia de solicitação de internação — convênio.", "guia-operadora", { tags: insuranceTags })
         ]),
         section(4, "Registros assistenciais", [
           item("anamnese", "Anamnese médica.", "anamnese"),
@@ -78,7 +78,7 @@
           item("obito", "Declaração de óbito (se houver).", "obito")
         ], { notice: documentNotice }),
         section(3, "Registros de autorização", [
-          item("guia-operadora", "Guia de autorização da operadora.", "guia-operadora", { tags: insuranceTags })
+          item("guia-operadora", "Guia de solicitação de internação — convênio.", "guia-operadora", { tags: insuranceTags })
         ]),
         section(4, "Registros assistenciais", [
           item("anamnese", "Anamnese médica.", "anamnese"),
@@ -105,7 +105,7 @@
           item("documento-responsavel", "Se menor de idade, cópia do documento com foto do responsável, contendo número do CPF.", "documento-responsavel")
         ], { notice: documentNotice }),
         section(3, "Registros de autorização", [
-          item("guia-operadora", "Guia de autorização da operadora.", "guia-operadora", { tags: insuranceTags })
+          item("guia-operadora", "Guia de solicitação de internação — convênio.", "guia-operadora", { tags: insuranceTags })
         ]),
         section(4, "Registros assistenciais — Recém-Nascido", [
           item("anamnese", "Anamnese médica.", "anamnese"),
@@ -140,7 +140,7 @@
           item("obito", "Declaração de óbito (se houver).", "obito")
         ], { notice: documentNotice }),
         section(3, "Registros de autorização", [
-          item("guia-operadora", "Guia de autorização da operadora.", "guia-operadora", { tags: insuranceTags })
+          item("guia-operadora", "Guia de solicitação de internação — convênio.", "guia-operadora", { tags: insuranceTags })
         ]),
         section(4, "Registros assistenciais — Médico e Parto", [
           item("anamnese", "Anamnese médica.", "anamnese"),
@@ -189,7 +189,7 @@
           item("obito", "Declaração de óbito (se houver).", "obito")
         ], { notice: documentNotice }),
         section(3, "Registros de autorização", [
-          item("guia-operadora", "Guia de autorização da operadora.", "guia-operadora", { tags: insuranceTags })
+          item("guia-operadora", "Guia de solicitação de internação — convênio.", "guia-operadora", { tags: insuranceTags })
         ]),
         section(4, "Registros assistenciais", [
           item("anamnese", "Anamnese médica.", "anamnese"),
@@ -224,7 +224,7 @@
       sections: [
         section(1, "Abertura do Cadastro", [item("abertura", identification, "abertura")]),
         section(2, "Registros de autorização", [
-          item("guia-operadora", "Guia de autorização da operadora.", "guia-operadora", { tags: insuranceTags }),
+          item("guia-operadora", "Guia de solicitação de internação — convênio.", "guia-operadora", { tags: insuranceTags }),
           item("sisreg", "Guia de autorização SISREG.", "sisreg", { tags: susTags }),
           item("solicitacao-exames", "Solicitação médica de exames."),
           item("apac", "Autorização de procedimentos ambulatoriais de alta complexidade — APAC autorizada para: tomografia computadorizada, ressonância magnética, endoscopia e colonoscopia.", "apac", { tags: susTags })
@@ -279,7 +279,7 @@
           item("obito", "Declaração de óbito (se houver).", "obito")
         ], { notice: documentNotice }),
         section(3, "Registros de autorização", [
-          item("guia-operadora", "Guia de autorização da operadora.", "guia-operadora", { tags: insuranceTags })
+          item("guia-operadora", "Guia de solicitação de internação — convênio.", "guia-operadora", { tags: insuranceTags })
         ]),
         section(4, "Registros assistenciais", [
           item("anamnese", "Anamnese médica.", "anamnese"),
