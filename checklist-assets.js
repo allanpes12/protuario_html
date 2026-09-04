@@ -628,4 +628,158 @@
       ]
     }
   };
+
+  // Referências atualizadas em agosto de 2026. Os PDFs recebidos foram
+  // renderizados em PNG para preservar zoom, arraste e uso offline no modal.
+  const groups = window.CHECKLIST_IMAGE_GROUPS;
+  const updatedContract = [
+    "imagens/checklist/Formularios prontuario/Contrato atualizado/pagina-01.png",
+    "imagens/checklist/Formularios prontuario/Contrato atualizado/pagina-02.png",
+    "imagens/checklist/Formularios prontuario/Contrato atualizado/pagina-03.png"
+  ];
+  const updatedDisclosureTerm = [
+    "imagens/checklist/Formularios prontuario/Termo esclarecimento atualizado/pagina-01.png"
+  ];
+  const updatedHemotherapy = [
+    "imagens/checklist/Formularios prontuario/APAC hemoterapia atualizado/pagina-01.png",
+    "imagens/checklist/Formularios prontuario/APAC hemoterapia atualizado/pagina-02.png"
+  ];
+  const updatedAnesthesiaReport = [
+    "imagens/checklist/Formularios prontuario/Relatorio de anestesia atualizado/pagina-01.png",
+    "imagens/checklist/Formularios prontuario/Relatorio de anestesia atualizado/pagina-02.png"
+  ];
+  const updatedDeathDeclaration = [
+    "imagens/checklist/Cirurgico/Declaração de Obito.jfif"
+  ];
+  const updatedLaboratoryExams = [
+    "imagens/checklist/Clinico/16-Exames laboratoriais/pagina-01.png",
+    "imagens/checklist/Clinico/16-Exames laboratoriais/pagina-02.png",
+    "imagens/checklist/Clinico/16-Exames laboratoriais/pagina-03.png",
+    "imagens/checklist/Clinico/16-Exames laboratoriais/pagina-04.png"
+  ];
+
+  ["cirurgico", "clinico", "clinico-rn", "obstetrico", "pa", "ambulatorial-cirurgia", "uti"].forEach((type) => {
+    groups[type].contrato = updatedContract;
+    groups[type]["termo-esclarecimento"] = updatedDisclosureTerm;
+  });
+  ["cirurgico", "clinico", "clinico-rn", "obstetrico", "uti"].forEach((type) => {
+    groups[type]["apac-hemoterapia"] = updatedHemotherapy;
+  });
+  ["cirurgico", "obstetrico"].forEach((type) => {
+    groups[type]["relatorio-anestesia"] = updatedAnesthesiaReport;
+  });
+  ["cirurgico", "clinico", "obstetrico", "pa", "uti"].forEach((type) => {
+    groups[type].obito = updatedDeathDeclaration;
+  });
+
+  groups.clinico["exames-laboratoriais"] = updatedLaboratoryExams;
+  groups["clinico-rn"]["exames-laboratoriais"] = updatedLaboratoryExams;
+  groups.obstetrico["ficha-risco"] = [
+    "imagens/checklist/Obstetrico/16-Ficha de Acolhimento e Classificação de Risco em Obstetricia/pagina-01.png"
+  ];
+  groups.pa["descricao-cirurgica"] = [
+    "imagens/checklist/Formularios prontuario/descrição cirurgica.png"
+  ];
+  groups.pa.eletrocardiograma = [
+    "imagens/checklist/Pronto Atendimento/ECG.jfif"
+  ];
+  groups["ambulatorial-exames"]["guia-operadora"] = [
+    "imagens/checklist/Ambulatorio de cirurgias ambulatoriais/11-Guia de solicitação de internação - convenio.jpg"
+  ];
+  groups["ambulatorial-cirurgia"]["integrador-quimico"] = [
+    "imagens/checklist/Ambulatorio de cirurgias ambulatoriais/Formulario integrador quimico/pagina-01.png"
+  ];
+  groups["ambulatorial-cirurgia"]["exames-laboratoriais"] = [
+    "imagens/checklist/Ambulatorio de cirurgias ambulatoriais/Exames laboratoriais/pagina-01.png",
+    "imagens/checklist/Ambulatorio de cirurgias ambulatoriais/Exames laboratoriais/pagina-02.png",
+    "imagens/checklist/Ambulatorio de cirurgias ambulatoriais/Exames laboratoriais/pagina-03.png",
+    "imagens/checklist/Ambulatorio de cirurgias ambulatoriais/Exames laboratoriais/pagina-04.png"
+  ];
+  groups.uti["consentimento-cirurgico"] = [
+    "imagens/checklist/UTI/5-Termo de Consentimento Cirurgico/pagina-01.png"
+  ];
+  groups.uti["evolucao-intensivista"] = [
+    "imagens/checklist/UTI/15- Evolução intensivista/pagina-01.png",
+    "imagens/checklist/UTI/15- Evolução intensivista/pagina-02.png"
+  ];
+  groups.uti["evolucao-diarista"] = [
+    "imagens/checklist/UTI/16-Evolução diarista diruno/pagina-01.png",
+    "imagens/checklist/UTI/16-Evolução diarista diruno/pagina-02.png",
+    "imagens/checklist/UTI/16.1-Evolução diarista noturno/pagina-01.png",
+    "imagens/checklist/UTI/16.1-Evolução diarista noturno/pagina-02.png"
+  ];
+  groups.uti["prescricao-hemodialise"] = [
+    "imagens/checklist/UTI/18-Prescriçao de Hemodialise/pagina-01.png"
+  ];
+  groups.uti.eletrocardiograma = [
+    "imagens/checklist/UTI/24-ECG.jfif"
+  ];
+  groups.oncologico.sisreg = [
+    "imagens/checklist/Ambulatorio Consulta Especialidades/3-Guia de Aut. SISREG.webp"
+  ];
+  groups.oncologico["exames-laboratoriais"] = updatedLaboratoryExams;
+
+  // Correções de setembro de 2026.
+  const horizontalBradesco = "imagens/checklist/Formularios prontuario/Carteira Bradesco horizontal/carteira-bradesco-horizontal.png";
+  [
+    "cirurgico",
+    "clinico",
+    "clinico-rn",
+    "obstetrico",
+    "pa",
+    "ambulatorial-exames",
+    "ambulatorial-cirurgia",
+    "uti"
+  ].forEach((type) => {
+    groups[type].abertura = groups[type].abertura.map((source) => (
+      source.endsWith("/carteirinha bradesco.png") ? horizontalBradesco : source
+    ));
+  });
+
+  groups.pa["prescricao-medica"] = [
+    "imagens/checklist/Pronto Atendimento/Prescrição médica atualizada/pagina-01.png",
+    "imagens/checklist/Pronto Atendimento/Prescrição médica atualizada/pagina-02.png"
+  ];
+  // Este PDF corresponde ao modelo já existente; o vínculo compartilhado
+  // abaixo torna a associação com os dois prontuários explícita.
+  const rnIdentification = [
+    "imagens/checklist/Clinico RN/15-Evolução de Enfermagem c registro do pezinho e Ficha de identificação/0.png"
+  ];
+  groups["clinico-rn"]["identificacao-rn"] = rnIdentification;
+  groups.obstetrico["identificacao-rn"] = rnIdentification;
+
+  groups.pa["prescricao-alta"] = [
+    "imagens/checklist/Pronto Atendimento/Prescrição de alta atualizada/pagina-01.png"
+  ];
+
+  const ecgRequest = "imagens/checklist/Formularios prontuario/Solicitação do ECG/pagina-01.png";
+  groups.pa.eletrocardiograma = [
+    ecgRequest,
+    "imagens/checklist/Pronto Atendimento/ECG.jfif"
+  ];
+  groups.uti.eletrocardiograma = [
+    ecgRequest,
+    "imagens/checklist/UTI/24-ECG.jfif"
+  ];
+
+  groups["ambulatorial-exames"]["laudo-imagem"] = [
+    "imagens/checklist/Ambulatorio exames/Laudos de imagem/Ecocardiograma/pagina-01.png",
+    "imagens/checklist/Ambulatorio exames/Laudos de imagem/Ecocardiograma/pagina-02.png",
+    "imagens/checklist/Ambulatorio exames/Laudos de imagem/TC/pagina-01.png"
+  ];
+
+  const updatedSafeSurgery = [
+    "imagens/checklist/Formularios prontuario/Cirurgia segura atualizada/verificacao-cirurgia-segura-pre-operatorio.jpg",
+    "imagens/checklist/Formularios prontuario/Cirurgia segura atualizada/cirurgia-segura.png"
+  ];
+  ["cirurgico", "obstetrico", "ambulatorial-cirurgia"].forEach((type) => {
+    groups[type]["cirurgia-segura"] = updatedSafeSurgery;
+  });
+
+  const updatedSurgicalConsent = [
+    "imagens/checklist/Formularios prontuario/Consentimento cirurgico atualizado/pagina-01.png"
+  ];
+  ["cirurgico", "obstetrico", "ambulatorial-cirurgia", "uti"].forEach((type) => {
+    groups[type]["consentimento-cirurgico"] = updatedSurgicalConsent;
+  });
 })();
